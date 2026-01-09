@@ -371,9 +371,8 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                 <TableHead>Контакт</TableHead>
                 <TableHead>Цена</TableHead>
                 <TableHead>Срок</TableHead>
-                <TableHead className="min-w-[200px]">Подход</TableHead>
+                <TableHead className="min-w-[180px]">Подход</TableHead>
                 <TableHead>Гарантии</TableHead>
-                <TableHead>Статус</TableHead>
                 <TableHead className="w-[100px]">Действия</TableHead>
               </TableRow>
             </TableHeader>
@@ -425,11 +424,6 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                     <p className="text-sm text-muted-foreground line-clamp-2 max-w-[150px]">
                       {offer.guarantees || "Без гарантий"}
                     </p>
-                  </TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[offer.status as OfferStatus]}`}>
-                      {STATUS_LABELS[offer.status as OfferStatus]}
-                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
