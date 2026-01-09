@@ -3,9 +3,10 @@ import {
   users, projects, offers,
   type User, type InsertUser,
   type Project, type InsertProject,
-  type Offer, type InsertOffer
+  type Offer, type InsertOffer,
+  type OfferStatus
 } from "@shared/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 export interface IStorage {
@@ -23,6 +24,14 @@ export interface IStorage {
   // Offers
   createOffer(projectId: number, offer: InsertOffer): Promise<Offer>;
   getProjectOffers(projectId: number): Promise<Offer[]>;
+  
+  // Offer status & deletion (single)
+  updateOfferStatus(offerId: number, status: OfferStatus): Promise<Offer>;
+  deleteOffer(offerId: number): Promise<void>;
+  
+  // Bulk operations
+  updateOffersStatus(offerIds: number[], status: OfferStatus): Promise<Offer[]>;
+  deleteOffers(offerIds: number[]): Promise<{ deleted: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -107,6 +116,34 @@ export class DatabaseStorage implements IStorage {
 
   async getProjectOffers(projectId: number): Promise<Offer[]> {
     return await db.select().from(offers).where(eq(offers.projectId, projectId)).orderBy(desc(offers.createdAt));
+  }
+
+  // === Single offer status & deletion ===
+  async updateOfferStatus(offerId: number, status: OfferStatus): Promise<Offer> {
+    const [offer] = await db.update(offers)
+      .set({ status })
+      .where(eq(offers.id, offerId))
+      .returning();
+    return offer;
+  }
+
+  async deleteOffer(offerId: number): Promise<void> {
+    await db.delete(offers).where(eq(offers.id, offerId));
+  }
+
+  // === Bulk operations ===
+  async updateOffersStatus(offerIds: number[], status: OfferStatus): Promise<Offer[]> {
+    if (offerIds.length === 0) return [];
+    return await db.update(offers)
+      .set({ status })
+      .where(inArray(offers.id, offerIds))
+      .returning();
+  }
+
+  async deleteOffers(offerIds: number[]): Promise<{ deleted: number }> {
+    if (offerIds.length === 0) return { deleted: 0 };
+    const result = await db.delete(offers).where(inArray(offers.id, offerIds)).returning();
+    return { deleted: result.length };
   }
 }
 

@@ -180,6 +180,9 @@ export const projects = pgTable("projects", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const OFFER_STATUSES = ["new", "shortlist", "rejected"] as const;
+export type OfferStatus = typeof OFFER_STATUSES[number];
+
 export const offers = pgTable("offers", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").notNull(), // Linked to projects.id
@@ -193,6 +196,7 @@ export const offers = pgTable("offers", {
   price: text("price").notNull(),
   guarantees: text("guarantees"),
   risks: text("risks"),
+  status: text("status").notNull().default("new"), // new | shortlist | rejected
   createdAt: timestamp("created_at").defaultNow(),
 });
 
