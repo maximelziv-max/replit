@@ -46,8 +46,8 @@ export default function PublicProject() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Project not found</h1>
-          <p className="text-muted-foreground">This link may be invalid or expired.</p>
+          <h1 className="text-2xl font-bold mb-2">Проект не найден</h1>
+          <p className="text-muted-foreground">Ссылка может быть недействительной или срок ее действия истек.</p>
         </div>
       </div>
     );
@@ -60,12 +60,12 @@ export default function PublicProject() {
           <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h2 className="text-3xl font-display font-bold mb-4">Offer Submitted!</h2>
+          <h2 className="text-3xl font-display font-bold mb-4">Офер отправлен!</h2>
           <p className="text-muted-foreground mb-8">
-            Your proposal has been sent to the client securely. They will contact you directly if they are interested.
+            Ваше предложение успешно отправлено клиенту. Он свяжется с вами, если оно его заинтересует.
           </p>
           <Button onClick={() => window.location.reload()} variant="outline">
-            Submit Another Offer
+            Отправить еще один офер
           </Button>
         </Card>
       </div>
@@ -84,7 +84,7 @@ export default function PublicProject() {
             }}
             className="shadow-lg shadow-primary/20"
           >
-            Submit Proposal
+            Отправить предложение
           </Button>
         </div>
       </header>
@@ -92,19 +92,19 @@ export default function PublicProject() {
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
         <section className="space-y-8 animate-in">
           <div>
-            <Badge variant="outline" className="mb-4">Project Brief</Badge>
+            <Badge variant="outline" className="mb-4">ТЗ проекта</Badge>
             <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6 text-foreground">
               {project.title}
             </h1>
             <div className="flex flex-wrap gap-6 text-muted-foreground text-sm font-medium">
               <span className="flex items-center bg-white px-3 py-1.5 rounded-full border shadow-sm">
                 <Calendar className="w-4 h-4 mr-2 text-primary" />
-                Deadline: {project.deadline}
+                Срок: {project.deadline}
               </span>
               {project.budget && (
                 <span className="flex items-center bg-white px-3 py-1.5 rounded-full border shadow-sm">
                   <DollarSign className="w-4 h-4 mr-2 text-primary" />
-                  Budget: {project.budget}
+                  Бюджет: {project.budget}
                 </span>
               )}
             </div>
@@ -114,7 +114,7 @@ export default function PublicProject() {
             <div className="md:col-span-2 space-y-8">
               <Card className="border-none shadow-md">
                 <CardContent className="p-8">
-                  <h3 className="text-lg font-bold font-display mb-4">Description</h3>
+                  <h3 className="text-lg font-bold font-display mb-4">Описание</h3>
                   <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground text-lg">
                     {project.description}
                   </p>
@@ -122,11 +122,11 @@ export default function PublicProject() {
               </Card>
 
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold font-display">Requirements</h3>
+                <h3 className="text-2xl font-bold font-display">Требования</h3>
                 <div className="grid gap-6">
                   <Card className="border-none shadow-sm">
                     <CardHeader>
-                      <CardTitle className="text-base">Expected Deliverables</CardTitle>
+                      <CardTitle className="text-base">Ожидаемые результаты</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="whitespace-pre-wrap text-muted-foreground">{project.expectedResult}</p>
@@ -140,7 +140,7 @@ export default function PublicProject() {
                {project.criteria && (
                 <Card className="border-none shadow-sm bg-primary/5">
                   <CardHeader>
-                    <CardTitle className="text-primary">Selection Criteria</CardTitle>
+                    <CardTitle className="text-primary">Критерии выбора</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-3">
@@ -161,8 +161,8 @@ export default function PublicProject() {
         <section id="offer-form" className="pt-12 border-t border-border/60">
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-display font-bold mb-3">Submit Your Offer</h2>
-              <p className="text-muted-foreground">Ready to take on this project? Send your proposal below.</p>
+              <h2 className="text-3xl font-display font-bold mb-3">Отправьте ваш офер</h2>
+              <p className="text-muted-foreground">Готовы взяться за этот проект? Заполните форму ниже.</p>
             </div>
 
             <Card className="shadow-xl border-border/60">
@@ -175,9 +175,9 @@ export default function PublicProject() {
                         name="freelancerName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Your Name</FormLabel>
+                            <FormLabel>Ваше имя</FormLabel>
                             <FormControl>
-                              <Input placeholder="John Doe" {...field} />
+                              <Input placeholder="Иван Иванов" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -188,9 +188,9 @@ export default function PublicProject() {
                         name="contact"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Contact Info</FormLabel>
+                            <FormLabel>Контактная информация</FormLabel>
                             <FormControl>
-                              <Input placeholder="Email or Phone" {...field} />
+                              <Input placeholder="Email, Telegram или телефон" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -203,10 +203,10 @@ export default function PublicProject() {
                       name="approach"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Your Approach</FormLabel>
+                          <FormLabel>Ваш подход</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="How will you tackle this project?" 
+                              placeholder="Как вы планируете реализовать проект?" 
                               className="min-h-[150px]"
                               {...field} 
                             />
@@ -222,9 +222,9 @@ export default function PublicProject() {
                         name="price"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Total Price</FormLabel>
+                            <FormLabel>Общая стоимость</FormLabel>
                             <FormControl>
-                              <Input placeholder="$1,500" {...field} />
+                              <Input placeholder="Напр. 50,000 руб." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -235,9 +235,9 @@ export default function PublicProject() {
                         name="deadline"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Delivery Time</FormLabel>
+                            <FormLabel>Срок выполнения</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g. 10 days" {...field} />
+                              <Input placeholder="Напр. 10 дней" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -250,10 +250,10 @@ export default function PublicProject() {
                       name="guarantees"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Guarantees (Optional)</FormLabel>
+                          <FormLabel>Гарантии (необязательно)</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="e.g. 3 rounds of revisions included" 
+                              placeholder="Напр. 3 этапа правок включены" 
                               className="min-h-[80px]"
                               {...field} 
                             />
@@ -268,10 +268,10 @@ export default function PublicProject() {
                       name="risks"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Potential Risks (Optional)</FormLabel>
+                          <FormLabel>Возможные риски (необязательно)</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Any dependencies or risks?" 
+                              placeholder="Какие могут возникнуть сложности?" 
                               className="min-h-[80px]"
                               {...field} 
                             />
@@ -289,11 +289,11 @@ export default function PublicProject() {
                     >
                       {isSubmitting ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Отправка...
                         </>
                       ) : (
                         <>
-                          <Send className="w-4 h-4 mr-2" /> Submit Proposal
+                          <Send className="w-4 h-4 mr-2" /> Отправить офер
                         </>
                       )}
                     </Button>

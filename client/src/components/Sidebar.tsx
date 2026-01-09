@@ -14,8 +14,8 @@ export function Sidebar() {
   const { logout, user } = useAuth();
 
   const links = [
-    { href: "/", label: "My Projects", icon: LayoutDashboard },
-    { href: "/projects/new", label: "Create Project", icon: PlusCircle },
+    { href: "/", label: "Мои проекты", icon: LayoutDashboard },
+    { href: "/projects/new", label: "Создать проект", icon: PlusCircle },
   ];
 
   return (
@@ -58,7 +58,7 @@ export function Sidebar() {
           </div>
           <div className="overflow-hidden">
             <p className="text-sm font-medium truncate">{user?.username}</p>
-            <p className="text-xs text-muted-foreground">Pro Account</p>
+            <p className="text-xs text-muted-foreground">Аккаунт Pro</p>
           </div>
         </div>
         <Button
@@ -67,7 +67,7 @@ export function Sidebar() {
           onClick={() => logout()}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
+          Выйти
         </Button>
       </div>
     </div>

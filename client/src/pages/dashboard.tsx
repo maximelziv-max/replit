@@ -28,17 +28,17 @@ export default function Dashboard() {
         <div className="max-w-5xl mx-auto space-y-8">
           <header className="flex justify-between items-end pb-6 border-b border-border/50">
             <div>
-              <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">My Projects</h1>
-              <p className="text-muted-foreground mt-2">Manage your briefs and review offers.</p>
+              <h1 className="text-3xl font-bold font-display tracking-tight text-foreground">Мои проекты</h1>
+              <p className="text-muted-foreground mt-2">Управляйте вашими ТЗ и просматривайте оферы.</p>
             </div>
           </header>
 
           {!projects || projects.length === 0 ? (
             <EmptyState
               icon={<FileText className="w-10 h-10" />}
-              title="No projects yet"
-              description="Create your first project brief to start receiving offers from freelancers."
-              actionLabel="Create Project"
+              title="Проектов пока нет"
+              description="Создайте ваше первое ТЗ, чтобы начать получать предложения от исполнителей."
+              actionLabel="Создать проект"
               actionHref="/projects/new"
             />
           ) : (
@@ -67,10 +67,10 @@ export default function Dashboard() {
                     <CardFooter className="border-t border-border/50 pt-4 mt-auto flex justify-between items-center text-sm">
                       <div className="flex items-center text-muted-foreground">
                         <Calendar className="w-4 h-4 mr-1.5" />
-                        Deadline: {project.deadline}
+                        Срок: {project.deadline}
                       </div>
                       <div className="flex items-center font-medium text-primary">
-                        {project.offerCount} Offers
+                        {project.offerCount} Оферов
                         <ArrowRight className="w-4 h-4 ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
                       </div>
                     </CardFooter>

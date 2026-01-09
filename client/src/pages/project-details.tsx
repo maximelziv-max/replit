@@ -29,8 +29,8 @@ export default function ProjectDetails() {
     const url = `${window.location.origin}/p/${project?.publicToken}`;
     navigator.clipboard.writeText(url);
     toast({
-      title: "Link Copied",
-      description: "Public link copied to clipboard.",
+      title: "Ссылка скопирована",
+      description: "Публичная ссылка скопирована в буфер обмена.",
     });
   };
 
@@ -53,7 +53,7 @@ export default function ProjectDetails() {
           <div className="mb-6">
             <Link href="/">
               <Button variant="ghost" size="sm" className="-ml-4 mb-4 text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                <ArrowLeft className="w-4 h-4 mr-2" /> Вернуться в панель
               </Button>
             </Link>
             
@@ -62,16 +62,16 @@ export default function ProjectDetails() {
                 <h1 className="text-3xl font-display font-bold tracking-tight mb-3">{project.title}</h1>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <Badge variant={project.status === "open" ? "default" : "secondary"}>
-                    {project.status.toUpperCase()}
+                    ОТКРЫТ
                   </Badge>
                   <span className="flex items-center">
                     <Calendar className="w-4 h-4 mr-1.5" />
-                    Deadline: {project.deadline}
+                    Срок: {project.deadline}
                   </span>
                   {project.budget && (
                     <span className="flex items-center">
                       <DollarSign className="w-4 h-4 mr-1" />
-                      Budget: {project.budget}
+                      Бюджет: {project.budget}
                     </span>
                   )}
                 </div>
@@ -80,12 +80,12 @@ export default function ProjectDetails() {
               <div className="flex gap-2">
                  <Button variant="outline" onClick={handleCopyLink} className="shadow-sm">
                   <Copy className="w-4 h-4 mr-2" />
-                  Copy Public Link
+                  Копировать ссылку
                 </Button>
                 <Link href={`/p/${project.publicToken}`} target="_blank">
                   <Button variant="secondary" className="shadow-sm">
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    View as Freelancer
+                    Просмотр как исполнитель
                   </Button>
                 </Link>
               </div>
@@ -98,13 +98,13 @@ export default function ProjectDetails() {
                 value="offers" 
                 className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none py-3 px-1 text-base"
               >
-                Offers Received ({project.offers.length})
+                Полученные оферы ({project.offers.length})
               </TabsTrigger>
               <TabsTrigger 
                 value="details" 
                 className="data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none rounded-none py-3 px-1 text-base"
               >
-                Brief Details
+                Детали ТЗ
               </TabsTrigger>
             </TabsList>
 
@@ -112,8 +112,8 @@ export default function ProjectDetails() {
               {project.offers.length === 0 ? (
                 <EmptyState
                   icon={<Share2 className="w-10 h-10" />}
-                  title="No offers yet"
-                  description="Share the public link with freelancers to start receiving proposals."
+                  title="Оферов пока нет"
+                  description="Поделитесь публичной ссылкой с исполнителями, чтобы начать получать предложения."
                 />
               ) : (
                 <div className="grid gap-6">
@@ -127,7 +127,7 @@ export default function ProjectDetails() {
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-primary">{offer.price}</div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Price</div>
+                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Цена</div>
                           </div>
                         </div>
                       </CardHeader>
@@ -135,14 +135,14 @@ export default function ProjectDetails() {
                       <CardContent className="pt-6 grid md:grid-cols-3 gap-8">
                         <div className="md:col-span-2 space-y-4">
                           <div>
-                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Approach</h4>
+                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Подход к работе</h4>
                             <p className="whitespace-pre-wrap leading-relaxed">{offer.approach}</p>
                           </div>
                           {offer.guarantees && (
                             <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
                               <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1 text-sm flex items-center">
                                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Guarantees
+                                Гарантии
                               </h4>
                               <p className="text-green-800 dark:text-green-300 text-sm">{offer.guarantees}</p>
                             </div>
@@ -150,16 +150,16 @@ export default function ProjectDetails() {
                         </div>
                         <div className="space-y-6 bg-muted/20 p-6 rounded-lg h-fit">
                           <div>
-                            <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Proposed Deadline</h4>
+                            <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Предлагаемый срок</h4>
                             <p className="font-medium">{offer.deadline}</p>
                           </div>
                           {offer.risks && (
                             <div>
-                              <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Identified Risks</h4>
+                              <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Выявленные риски</h4>
                               <p className="text-sm text-muted-foreground">{offer.risks}</p>
                             </div>
                           )}
-                          <Button className="w-full">Contact Freelancer</Button>
+                          <Button className="w-full">Связаться</Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -172,18 +172,18 @@ export default function ProjectDetails() {
               <Card>
                 <CardContent className="p-8 space-y-8">
                   <div>
-                    <h3 className="text-lg font-bold font-display mb-3">Project Description</h3>
+                    <h3 className="text-lg font-bold font-display mb-3">Описание проекта</h3>
                     <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{project.description}</p>
                   </div>
                   <Separator />
                   <div className="grid md:grid-cols-2 gap-8">
                     <div>
-                      <h3 className="text-lg font-bold font-display mb-3">Expected Deliverables</h3>
+                      <h3 className="text-lg font-bold font-display mb-3">Ожидаемые результаты</h3>
                       <p className="whitespace-pre-wrap text-muted-foreground">{project.expectedResult}</p>
                     </div>
                     {project.criteria && (
                       <div>
-                        <h3 className="text-lg font-bold font-display mb-3">Selection Criteria</h3>
+                        <h3 className="text-lg font-bold font-display mb-3">Критерии выбора</h3>
                         <ul className="space-y-2">
                           {(project.criteria as string[]).map((c, i) => (
                             <li key={i} className="flex items-start gap-2 text-muted-foreground">

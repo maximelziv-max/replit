@@ -37,9 +37,9 @@ export default function AuthPage() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-display font-bold">Welcome to Briefly</CardTitle>
+            <CardTitle className="text-2xl font-display font-bold">Добро пожаловать в Briefly</CardTitle>
             <CardDescription className="text-base">
-              Create, share, and manage your project briefs
+              Создавайте, делитесь и управляйте вашими ТЗ
             </CardDescription>
           </div>
         </CardHeader>
@@ -51,10 +51,10 @@ export default function AuthPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Имя пользователя</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Enter your username" 
+                        placeholder="Введите ваше имя" 
                         className="h-11 bg-muted/50 focus:bg-background transition-colors"
                         {...field} 
                       />
@@ -68,7 +68,7 @@ export default function AuthPage() {
                 className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all"
                 disabled={isLoggingIn}
               >
-                {isLoggingIn ? "Signing in..." : "Continue"}
+                {isLoggingIn ? "Вход..." : "Продолжить"}
               </Button>
             </form>
           </Form>

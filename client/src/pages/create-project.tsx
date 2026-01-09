@@ -57,11 +57,11 @@ export default function CreateProject() {
           <div className="mb-8">
             <Link href="/">
               <Button variant="ghost" size="sm" className="-ml-4 mb-4 text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
+                <ArrowLeft className="w-4 h-4 mr-2" /> Вернуться в панель
               </Button>
             </Link>
-            <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Create New Brief</h1>
-            <p className="text-muted-foreground">Define your project requirements to find the perfect freelancer.</p>
+            <h1 className="text-4xl font-display font-bold tracking-tight mb-2">Создать новое ТЗ</h1>
+            <p className="text-muted-foreground">Опишите требования к вашему проекту, чтобы найти идеального исполнителя.</p>
           </div>
 
           <Card className="shadow-lg shadow-primary/5 border-border/60">
@@ -73,9 +73,9 @@ export default function CreateProject() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Project Title</FormLabel>
+                        <FormLabel className="text-base font-semibold">Название проекта</FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Corporate Website Redesign" className="h-12" {...field} />
+                          <Input placeholder="Например: Редизайн корпоративного сайта" className="h-12" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -87,10 +87,10 @@ export default function CreateProject() {
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Project Description</FormLabel>
+                        <FormLabel className="text-base font-semibold">Описание проекта</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="Describe the project goals, audience, and scope..." 
+                            placeholder="Опишите цели проекта, аудиторию и объем работ..." 
                             className="min-h-[150px] resize-none" 
                             {...field} 
                           />
@@ -106,9 +106,9 @@ export default function CreateProject() {
                       name="deadline"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold">Deadline</FormLabel>
+                          <FormLabel className="text-base font-semibold">Сроки</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. 2 weeks, or Dec 31st" {...field} />
+                            <Input placeholder="Например: 2 недели или до 31 декабря" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -119,9 +119,9 @@ export default function CreateProject() {
                       name="budget"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-base font-semibold">Budget (Optional)</FormLabel>
+                          <FormLabel className="text-base font-semibold">Бюджет (необязательно)</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. $2,000 - $5,000" {...field} value={field.value || ''} />
+                            <Input placeholder="Например: 50,000 - 100,000 руб." {...field} value={field.value || ''} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -134,10 +134,10 @@ export default function CreateProject() {
                     name="expectedResult"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-base font-semibold">Expected Deliverables</FormLabel>
+                        <FormLabel className="text-base font-semibold">Ожидаемые результаты</FormLabel>
                         <FormControl>
                           <Textarea 
-                            placeholder="List specific files, formats, or outcomes..." 
+                            placeholder="Перечислите конкретные файлы, форматы или итоги..." 
                             className="min-h-[100px]"
                             {...field} 
                           />
@@ -148,12 +148,12 @@ export default function CreateProject() {
                   />
 
                   <div className="space-y-3">
-                    <FormLabel className="text-base font-semibold">Selection Criteria</FormLabel>
+                    <FormLabel className="text-base font-semibold">Критерии выбора</FormLabel>
                     <div className="flex gap-2">
                       <Input 
                         value={newCriteria} 
                         onChange={(e) => setNewCriteria(e.target.value)}
-                        placeholder="Add a criterion (e.g. React experience)"
+                        placeholder="Добавьте критерий (напр. опыт в React)"
                         onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCriteria())}
                       />
                       <Button type="button" onClick={handleAddCriteria} variant="secondary">
@@ -186,7 +186,7 @@ export default function CreateProject() {
                       disabled={isPending}
                     >
                       {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      Create Brief
+                      Создать ТЗ
                     </Button>
                   </div>
                 </form>
