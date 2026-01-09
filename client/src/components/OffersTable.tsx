@@ -356,7 +356,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
       )}
 
       {viewMode === "table" && (
-        <div className="border rounded-lg overflow-hidden">
+        <div className="border rounded-lg overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -371,8 +371,10 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                 <TableHead>Контакт</TableHead>
                 <TableHead>Цена</TableHead>
                 <TableHead>Срок</TableHead>
+                <TableHead className="min-w-[200px]">Подход</TableHead>
+                <TableHead>Гарантии</TableHead>
                 <TableHead>Статус</TableHead>
-                <TableHead className="w-[120px]">Действия</TableHead>
+                <TableHead className="w-[100px]">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -385,25 +387,47 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                       data-testid={`checkbox-offer-${offer.id}`}
                     />
                   </TableCell>
-                  <TableCell className="font-medium">{offer.freelancerName}</TableCell>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{offer.freelancerName}</div>
+                      {offer.skills && (
+                        <div className="text-xs text-muted-foreground truncate max-w-[150px]">{offer.skills}</div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <span className="text-muted-foreground text-sm truncate max-w-[120px]">{offer.contact}</span>
+                      <span className="text-sm truncate max-w-[140px]">{offer.contact}</span>
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-6 w-6"
+                        className="h-6 w-6 shrink-0"
                         onClick={(e) => { e.stopPropagation(); copyContact(offer.contact); }}
+                        title="Скопировать контакт"
                         data-testid={`button-copy-contact-${offer.id}`}
                       >
                         <Copy className="w-3 h-3" />
                       </Button>
                     </div>
                   </TableCell>
-                  <TableCell className="font-semibold text-primary">{offer.price}</TableCell>
-                  <TableCell>{offer.deadline}</TableCell>
+                  <TableCell className="font-semibold text-primary whitespace-nowrap">
+                    {offer.price || "По договорённости"}
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {offer.deadline || "Не указан"}
+                  </TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[offer.status as OfferStatus]}`}>
+                    <p className="text-sm text-muted-foreground line-clamp-2 max-w-[200px]">
+                      {offer.approach || "Не описан"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="text-sm text-muted-foreground line-clamp-2 max-w-[150px]">
+                      {offer.guarantees || "Без гарантий"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STATUS_COLORS[offer.status as OfferStatus]}`}>
                       {STATUS_LABELS[offer.status as OfferStatus]}
                     </span>
                   </TableCell>
@@ -413,6 +437,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                         size="icon"
                         variant="ghost"
                         onClick={() => setOpenOffer(offer)}
+                        title="Посмотреть оффер"
                         data-testid={`button-view-offer-${offer.id}`}
                       >
                         <Eye className="w-4 h-4" />
@@ -421,6 +446,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                         size="icon"
                         variant="ghost"
                         onClick={() => setSingleDeleteId(offer.id)}
+                        title="Удалить"
                         data-testid={`button-delete-offer-${offer.id}`}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
@@ -447,7 +473,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
           {sortedOffers.map((offer) => (
             <div
               key={offer.id}
-              className="flex items-center gap-3 p-3 border rounded-lg hover-elevate cursor-pointer"
+              className="flex items-start gap-3 p-3 border rounded-lg hover-elevate cursor-pointer"
               onClick={() => setOpenOffer(offer)}
               data-testid={`list-offer-${offer.id}`}
             >
@@ -455,20 +481,25 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                 checked={selectedIds.has(offer.id)}
                 onCheckedChange={() => toggleSelect(offer.id)}
                 onClick={(e) => e.stopPropagation()}
+                className="mt-1"
                 data-testid={`checkbox-list-offer-${offer.id}`}
               />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="font-medium">{offer.freelancerName}</span>
+                  {offer.skills && (
+                    <span className="text-xs text-muted-foreground">• {offer.skills.slice(0, 30)}{offer.skills.length > 30 ? "..." : ""}</span>
+                  )}
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[offer.status as OfferStatus]}`}>
                     {STATUS_LABELS[offer.status as OfferStatus]}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground truncate">{offer.contact}</p>
+                <p className="text-sm text-muted-foreground mb-1">{offer.contact}</p>
+                <p className="text-sm text-muted-foreground line-clamp-1">{offer.approach || "Подход не описан"}</p>
               </div>
               <div className="text-right shrink-0">
-                <div className="font-semibold text-primary">{offer.price}</div>
-                <div className="text-xs text-muted-foreground">{offer.deadline}</div>
+                <div className="font-semibold text-primary">{offer.price || "Договорная"}</div>
+                <div className="text-xs text-muted-foreground">{offer.deadline || "Срок не указан"}</div>
               </div>
               <Button
                 size="icon"
@@ -477,6 +508,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                   e.stopPropagation();
                   setSingleDeleteId(offer.id);
                 }}
+                title="Удалить"
                 data-testid={`button-delete-list-offer-${offer.id}`}
               >
                 <Trash2 className="w-4 h-4 text-destructive" />
@@ -509,7 +541,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                       {STATUS_LABELS[offer.status as OfferStatus]}
                     </span>
                     <div className="text-right ml-2">
-                      <div className="text-lg font-bold text-primary">{offer.price}</div>
+                      <div className="text-lg font-bold text-primary">{offer.price || "По договорённости"}</div>
                       <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Цена</div>
                     </div>
                   </div>
@@ -518,42 +550,40 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
               <Separator />
               <CardContent className="pt-6 grid md:grid-cols-3 gap-8">
                 <div className="md:col-span-2 space-y-4">
-                  {offer.portfolioLinks && (
-                    <div className="flex items-start gap-2">
-                      <Link2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1 text-sm">Портфолио</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.portfolioLinks}</p>
-                      </div>
+                  <div className="flex items-start gap-2">
+                    <Link2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1 text-sm">Портфолио</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.portfolioLinks || "Не указано"}</p>
                     </div>
-                  )}
-                  {offer.experience && (
-                    <div className="flex items-start gap-2">
-                      <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1 text-sm">Опыт</h4>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.experience}</p>
-                      </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1 text-sm">Опыт</h4>
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.experience || "Не указан"}</p>
                     </div>
-                  )}
-                  {offer.skills && (
-                    <div className="flex items-start gap-2">
-                      <Code2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <div>
-                        <h4 className="font-semibold mb-1 text-sm">Навыки</h4>
-                        <p className="text-sm text-muted-foreground">{offer.skills}</p>
-                      </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Code2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1 text-sm">Навыки</h4>
+                      <p className="text-sm text-muted-foreground">{offer.skills || "Не указаны"}</p>
                     </div>
-                  )}
+                  </div>
                   <div>
                     <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Подход к работе</h4>
-                    <p className="whitespace-pre-wrap leading-relaxed line-clamp-3">{offer.approach}</p>
+                    <p className="whitespace-pre-wrap leading-relaxed line-clamp-3">{offer.approach || "Не описан"}</p>
                   </div>
                 </div>
                 <div className="space-y-4 bg-muted/20 p-6 rounded-lg h-fit">
                   <div>
                     <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Предлагаемый срок</h4>
-                    <p className="font-medium">{offer.deadline}</p>
+                    <p className="font-medium">{offer.deadline || "Не указан"}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Гарантии</h4>
+                    <p className="text-sm">{offer.guarantees || "Без гарантий"}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1" onClick={() => setOpenOffer(offer)} data-testid={`button-view-card-offer-${offer.id}`}>
@@ -616,7 +646,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm text-muted-foreground">Цена:</span>
-                    <span className="ml-2 text-xl font-bold text-primary">{openOffer.price}</span>
+                    <span className="ml-2 text-xl font-bold text-primary">{openOffer.price || "По договорённости"}</span>
                   </div>
                   <Select
                     value={openOffer.status}
@@ -636,59 +666,49 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
 
                 <Separator />
 
-                {openOffer.portfolioLinks && (
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Link2 className="w-4 h-4" /> Портфолио
-                    </h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{openOffer.portfolioLinks}</p>
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Link2 className="w-4 h-4" /> Портфолио
+                  </h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{openOffer.portfolioLinks || "Не указано"}</p>
+                </div>
 
-                {openOffer.experience && (
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Briefcase className="w-4 h-4" /> Опыт
-                    </h4>
-                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{openOffer.experience}</p>
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" /> Опыт
+                  </h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{openOffer.experience || "Не указан"}</p>
+                </div>
 
-                {openOffer.skills && (
-                  <div>
-                    <h4 className="font-semibold mb-2 flex items-center gap-2">
-                      <Code2 className="w-4 h-4" /> Навыки
-                    </h4>
-                    <p className="text-sm text-muted-foreground">{openOffer.skills}</p>
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Code2 className="w-4 h-4" /> Навыки
+                  </h4>
+                  <p className="text-sm text-muted-foreground">{openOffer.skills || "Не указаны"}</p>
+                </div>
 
                 <div>
                   <h4 className="font-semibold mb-2">Подход к работе</h4>
-                  <p className="whitespace-pre-wrap text-muted-foreground">{openOffer.approach}</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{openOffer.approach || "Не описан"}</p>
                 </div>
 
                 <div>
                   <h4 className="font-semibold mb-2">Предлагаемый срок</h4>
-                  <p>{openOffer.deadline}</p>
+                  <p>{openOffer.deadline || "Не указан"}</p>
                 </div>
 
-                {openOffer.guarantees && (
-                  <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
-                    <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1 text-sm flex items-center">
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Гарантии
-                    </h4>
-                    <p className="text-green-800 dark:text-green-300 text-sm">{openOffer.guarantees}</p>
-                  </div>
-                )}
+                <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
+                  <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1 text-sm flex items-center">
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Гарантии
+                  </h4>
+                  <p className="text-green-800 dark:text-green-300 text-sm">{openOffer.guarantees || "Без гарантий"}</p>
+                </div>
 
-                {openOffer.risks && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Выявленные риски</h4>
-                    <p className="text-sm text-muted-foreground">{openOffer.risks}</p>
-                  </div>
-                )}
+                <div>
+                  <h4 className="font-semibold mb-2">Возможные риски</h4>
+                  <p className="text-sm text-muted-foreground">{openOffer.risks || "Не указаны"}</p>
+                </div>
 
                 <div className="flex gap-2 pt-4">
                   <Button className="flex-1">Связаться</Button>
