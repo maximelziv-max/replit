@@ -195,14 +195,6 @@ export default function PublicProject() {
                   <li>• Обычно ответ приходит в течение 1-3 дней</li>
                 </ul>
               </div>
-              <Button 
-                onClick={() => window.location.reload()} 
-                variant="outline"
-                className="w-full"
-                data-testid="button-send-another-offer"
-              >
-                Отправить еще один офер
-              </Button>
             </div>
           </CardContent>
         </Card>
