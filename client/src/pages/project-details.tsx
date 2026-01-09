@@ -14,7 +14,10 @@ import {
   Share2, 
   ExternalLink,
   Copy,
-  Loader2
+  Loader2,
+  Link2,
+  Briefcase,
+  Code2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyState } from "@/components/EmptyState";
@@ -134,6 +137,33 @@ export default function ProjectDetails() {
                       <Separator />
                       <CardContent className="pt-6 grid md:grid-cols-3 gap-8">
                         <div className="md:col-span-2 space-y-4">
+                          {offer.portfolioLinks && (
+                            <div className="flex items-start gap-2">
+                              <Link2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                              <div>
+                                <h4 className="font-semibold mb-1 text-sm">Портфолио</h4>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.portfolioLinks}</p>
+                              </div>
+                            </div>
+                          )}
+                          {offer.experience && (
+                            <div className="flex items-start gap-2">
+                              <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                              <div>
+                                <h4 className="font-semibold mb-1 text-sm">Опыт</h4>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.experience}</p>
+                              </div>
+                            </div>
+                          )}
+                          {offer.skills && (
+                            <div className="flex items-start gap-2">
+                              <Code2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+                              <div>
+                                <h4 className="font-semibold mb-1 text-sm">Навыки</h4>
+                                <p className="text-sm text-muted-foreground">{offer.skills}</p>
+                              </div>
+                            </div>
+                          )}
                           <div>
                             <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Подход к работе</h4>
                             <p className="whitespace-pre-wrap leading-relaxed">{offer.approach}</p>

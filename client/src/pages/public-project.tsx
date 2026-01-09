@@ -37,6 +37,9 @@ export default function PublicProject() {
     defaultValues: {
       freelancerName: "",
       contact: "",
+      portfolioLinks: "",
+      experience: "",
+      skills: "",
       approach: "",
       deadline: "",
       price: "",
@@ -217,7 +220,7 @@ export default function PublicProject() {
                           <FormItem>
                             <FormLabel>Ваше имя</FormLabel>
                             <FormControl>
-                              <Input placeholder="Иван Иванов" {...field} />
+                              <Input placeholder="Иван Иванов" {...field} data-testid="input-offer-name" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -230,13 +233,75 @@ export default function PublicProject() {
                           <FormItem>
                             <FormLabel>Контактная информация</FormLabel>
                             <FormControl>
-                              <Input placeholder="Email, Telegram или телефон" {...field} />
+                              <Input placeholder="Email, Telegram или телефон" {...field} data-testid="input-offer-contact" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
+
+                    <FormField
+                      control={form.control}
+                      name="portfolioLinks"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Портфолио / профили</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Ссылки на GitHub / HH / LinkedIn / сайт / Notion (можно несколько)"
+                              className="min-h-[80px]"
+                              {...field} 
+                              value={field.value || ''}
+                              data-testid="input-offer-portfolio"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">Рекомендуем добавить для повышения доверия</p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="experience"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Опыт и релевантные проекты</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Коротко: опыт, похожие задачи, 2–3 примера проектов"
+                              className="min-h-[100px]"
+                              maxLength={600}
+                              {...field} 
+                              value={field.value || ''}
+                              data-testid="input-offer-experience"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="skills"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Стек / ключевые навыки</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Напр. Python, FastAPI, PostgreSQL, Docker"
+                              maxLength={200}
+                              {...field} 
+                              value={field.value || ''}
+                              data-testid="input-offer-skills"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}

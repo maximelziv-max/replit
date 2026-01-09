@@ -41,7 +41,7 @@ export default function CreateProject() {
   });
 
   useEffect(() => {
-    setSelectedCriteria([...template.defaultCriteria]);
+    setSelectedCriteria([]);
     setCustomCriteria([]);
     form.setValue("templateType", selectedTemplate);
   }, [selectedTemplate]);

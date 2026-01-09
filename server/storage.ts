@@ -92,11 +92,14 @@ export class DatabaseStorage implements IStorage {
     const [offer] = await db.insert(offers).values({
       freelancerName: insertOffer.freelancerName,
       contact: insertOffer.contact,
+      portfolioLinks: insertOffer.portfolioLinks || null,
+      experience: insertOffer.experience || null,
+      skills: insertOffer.skills || null,
       approach: insertOffer.approach,
       deadline: insertOffer.deadline,
       price: insertOffer.price,
-      guarantees: insertOffer.guarantees,
-      risks: insertOffer.risks,
+      guarantees: insertOffer.guarantees || null,
+      risks: insertOffer.risks || null,
       projectId
     }).returning();
     return offer;

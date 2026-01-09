@@ -185,6 +185,9 @@ export const offers = pgTable("offers", {
   projectId: integer("project_id").notNull(), // Linked to projects.id
   freelancerName: text("freelancer_name").notNull(),
   contact: text("contact").notNull(),
+  portfolioLinks: text("portfolio_links"), // Links to GitHub, HH, LinkedIn, etc.
+  experience: text("experience"), // Relevant experience and projects
+  skills: text("skills"), // Tech stack / key skills
   approach: text("approach").notNull(),
   deadline: text("deadline").notNull(),
   price: text("price").notNull(),
