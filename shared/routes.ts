@@ -2,6 +2,9 @@
 import { z } from 'zod';
 import { insertUserSchema, insertProjectSchema, insertOfferSchema, users, projects, offers } from './schema';
 
+// Safe user type without passwordHash
+export type SafeUser = Omit<typeof users.$inferSelect, 'passwordHash'>;
+
 // ============================================
 // SHARED ERROR SCHEMAS
 // ============================================
@@ -31,7 +34,7 @@ export const api = {
       path: '/api/auth/login',
       input: insertUserSchema,
       responses: {
-        200: z.custom<typeof users.$inferSelect>(), // Returns the user
+        200: z.custom<SafeUser>(),
         400: errorSchemas.validation,
       },
     },
@@ -46,7 +49,7 @@ export const api = {
       method: 'GET' as const,
       path: '/api/auth/me',
       responses: {
-        200: z.custom<typeof users.$inferSelect | null>(),
+        200: z.custom<SafeUser | null>(),
       },
     },
   },

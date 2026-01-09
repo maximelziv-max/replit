@@ -98,7 +98,12 @@ export async function registerRoutes(
       return res.json(null);
     }
     const user = await storage.getUser(req.session.userId);
-    res.json(user || null);
+    if (!user) {
+      return res.json(null);
+    }
+    // Don't send passwordHash to client
+    const { passwordHash: _, ...safeUser } = user;
+    res.json(safeUser);
   });
 
   // === Project Routes ===
