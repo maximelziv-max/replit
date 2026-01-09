@@ -6,6 +6,7 @@ import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import bcrypt from "bcryptjs";
+import { OFFER_STATUSES, type OfferStatus } from "@shared/schema";
 
 // Extend session type
 declare module "express-session" {
@@ -176,6 +177,82 @@ export async function registerRoutes(
         res.status(400).json({ message: "Invalid input" });
       } else {
         console.error("Create offer error:", err);
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  // === Single Offer Status/Delete ===
+
+  const offerStatusSchema = z.object({
+    status: z.enum(OFFER_STATUSES)
+  });
+
+  app.patch("/api/offers/:id/status", requireAuth, async (req, res) => {
+    try {
+      const offerId = Number(req.params.id);
+      const { status } = offerStatusSchema.parse(req.body);
+      const offer = await storage.updateOfferStatus(offerId, status);
+      res.json(offer);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid status" });
+      } else {
+        console.error("Update offer status error:", err);
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  app.delete("/api/offers/:id", requireAuth, async (req, res) => {
+    try {
+      const offerId = Number(req.params.id);
+      await storage.deleteOffer(offerId);
+      res.json({ success: true });
+    } catch (err) {
+      console.error("Delete offer error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // === Bulk Offer Operations ===
+
+  const bulkStatusSchema = z.object({
+    offerIds: z.array(z.number()).min(1, "Выберите хотя бы один офер"),
+    status: z.enum(OFFER_STATUSES)
+  });
+
+  const bulkDeleteSchema = z.object({
+    offerIds: z.array(z.number()).min(1, "Выберите хотя бы один офер")
+  });
+
+  app.patch("/api/offers/bulk/status", requireAuth, async (req, res) => {
+    try {
+      const { offerIds, status } = bulkStatusSchema.parse(req.body);
+      const offers = await storage.updateOffersStatus(offerIds, status);
+      res.json(offers);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const message = err.errors[0]?.message || "Invalid input";
+        res.status(400).json({ message });
+      } else {
+        console.error("Bulk status update error:", err);
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  app.delete("/api/offers/bulk", requireAuth, async (req, res) => {
+    try {
+      const { offerIds } = bulkDeleteSchema.parse(req.body);
+      const result = await storage.deleteOffers(offerIds);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        const message = err.errors[0]?.message || "Invalid input";
+        res.status(400).json({ message });
+      } else {
+        console.error("Bulk delete error:", err);
         res.status(500).json({ message: "Server error" });
       }
     }
