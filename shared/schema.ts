@@ -251,3 +251,6 @@ export type InsertOffer = z.infer<typeof insertOfferSchema>;
 
 // Custom types for API responses
 export type ProjectWithOffers = Project & { offers: Offer[] };
+
+// Re-export chat schema
+export * from "./models/chat";

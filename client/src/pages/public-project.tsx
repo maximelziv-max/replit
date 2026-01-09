@@ -10,13 +10,29 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CheckCircle2, DollarSign, Loader2, Send, Video, Palette, TrendingUp, Code, PenLine, Puzzle } from "lucide-react";
+import { Calendar, CheckCircle2, DollarSign, Loader2, Send, Video, Palette, TrendingUp, Code, PenLine, Puzzle, Sparkles, Lightbulb } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Video, Palette, TrendingUp, Code, PenLine, Puzzle
 };
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
+interface AIOfferImproveResult {
+  suggested_approach: string;
+  suggested_experience: string;
+  suggested_guarantees: string;
+  improvements: string[];
+}
+
+interface AIOfferReviewResult {
+  improvements: string[];
+  missing_info: string[];
+}
 
 function getOfferHints(templateType: string | null | undefined) {
   const type = (templateType || "universal") as TemplateType;
@@ -29,7 +45,12 @@ export default function PublicProject() {
   const { data: project, isLoading: isLoadingProject } = usePublicProject(token);
   const { mutate: createOffer, isPending: isSubmitting, isSuccess } = useCreateOffer(token);
   const [activeSection, setActiveSection] = useState<'brief' | 'offer'>('brief');
+  const [aiImproveResult, setAiImproveResult] = useState<AIOfferImproveResult | null>(null);
+  const [aiReviewResult, setAiReviewResult] = useState<AIOfferReviewResult | null>(null);
+  const [showImproveDialog, setShowImproveDialog] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
   
+  const { toast } = useToast();
   const offerHints = getOfferHints(project?.templateType);
 
   const form = useForm({
@@ -47,6 +68,66 @@ export default function PublicProject() {
       risks: "",
     },
   });
+
+  const improveMutation = useMutation({
+    mutationFn: async (data: { approach: string; experience: string; skills: string; guarantees?: string; projectDescription: string }) => {
+      const res = await apiRequest("POST", "/api/ai/offer/improve", data);
+      return res.json() as Promise<AIOfferImproveResult>;
+    },
+    onSuccess: (data) => {
+      setAiImproveResult(data);
+      setShowImproveDialog(true);
+    },
+    onError: (err: any) => {
+      toast({ title: "Ошибка", description: err.message || "Не удалось улучшить офер", variant: "destructive" });
+    },
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async (data: { approach: string; experience: string; skills: string; guarantees?: string; projectDescription: string }) => {
+      const res = await apiRequest("POST", "/api/ai/offer/review", data);
+      return res.json() as Promise<AIOfferReviewResult>;
+    },
+    onSuccess: (data) => {
+      setAiReviewResult(data);
+      setShowReviewDialog(true);
+    },
+    onError: (err: any) => {
+      toast({ title: "Ошибка", description: err.message || "Не удалось получить советы", variant: "destructive" });
+    },
+  });
+
+  const handleAIImprove = () => {
+    const values = form.getValues();
+    improveMutation.mutate({
+      approach: values.approach,
+      experience: values.experience || "",
+      skills: values.skills || "",
+      guarantees: values.guarantees,
+      projectDescription: project?.description || "",
+    });
+  };
+
+  const handleAIReview = () => {
+    const values = form.getValues();
+    reviewMutation.mutate({
+      approach: values.approach,
+      experience: values.experience || "",
+      skills: values.skills || "",
+      guarantees: values.guarantees,
+      projectDescription: project?.description || "",
+    });
+  };
+
+  const applyImprovement = () => {
+    if (aiImproveResult) {
+      form.setValue("approach", aiImproveResult.suggested_approach);
+      form.setValue("experience", aiImproveResult.suggested_experience);
+      form.setValue("guarantees", aiImproveResult.suggested_guarantees);
+      setShowImproveDialog(false);
+      toast({ title: "Улучшения применены" });
+    }
+  };
 
   if (isLoadingProject) {
     return (
@@ -397,6 +478,29 @@ export default function PublicProject() {
                       )}
                     />
 
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={handleAIImprove}
+                        disabled={improveMutation.isPending}
+                        data-testid="button-ai-improve-offer"
+                      >
+                        {improveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        Улучшить текст
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={handleAIReview}
+                        disabled={reviewMutation.isPending}
+                        data-testid="button-ai-review-offer"
+                      >
+                        {reviewMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Lightbulb className="w-4 h-4 mr-2" />}
+                        Совет по оферу
+                      </Button>
+                    </div>
+
                     <Button 
                       type="submit" 
                       size="lg" 
@@ -420,6 +524,78 @@ export default function PublicProject() {
           </div>
         </section>
       </main>
+
+      <Dialog open={showImproveDialog} onOpenChange={setShowImproveDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Предложенные улучшения</DialogTitle>
+            <DialogDescription>Просмотрите предложенные изменения и примените, если они вам подходят.</DialogDescription>
+          </DialogHeader>
+          {aiImproveResult && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенный подход:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_approach}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенный опыт:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_experience}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенные гарантии:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_guarantees}</p>
+              </div>
+              {aiImproveResult.improvements.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Рекомендации:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiImproveResult.improvements.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImproveDialog(false)}>Отмена</Button>
+            <Button onClick={applyImprovement} data-testid="button-apply-offer-improvement">Применить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Советы по оферу</DialogTitle>
+            <DialogDescription>Рекомендации для улучшения вашего предложения.</DialogDescription>
+          </DialogHeader>
+          {aiReviewResult && (
+            <div className="space-y-4">
+              {aiReviewResult.improvements.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Рекомендации:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiReviewResult.improvements.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {aiReviewResult.missing_info.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Что ещё добавить:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiReviewResult.missing_info.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {aiReviewResult.improvements.length === 0 && aiReviewResult.missing_info.length === 0 && (
+                <p className="text-sm text-muted-foreground">Ваш офер выглядит хорошо!</p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowReviewDialog(false)}>Закрыть</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -9,7 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Loader2, Plus, Trash2, Video, Palette, TrendingUp, Code, PenLine, Puzzle } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Trash2, Video, Palette, TrendingUp, Code, PenLine, Puzzle, Sparkles, Lightbulb } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Video, Palette, TrendingUp, Code, PenLine, Puzzle
@@ -18,14 +22,91 @@ import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
+interface AIImproveResult {
+  suggested_description: string;
+  suggested_result: string;
+  improvements: string[];
+  missing_info: string[];
+}
+
+interface AIReviewResult {
+  improvements: string[];
+  missing_info: string[];
+}
+
 export default function CreateProject() {
   const { mutate: createProject, isPending } = useCreateProject();
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("universal");
   const [selectedCriteria, setSelectedCriteria] = useState<string[]>([]);
   const [customCriteria, setCustomCriteria] = useState<string[]>([]);
   const [newCriteria, setNewCriteria] = useState("");
-
+  const [aiImproveResult, setAiImproveResult] = useState<AIImproveResult | null>(null);
+  const [aiReviewResult, setAiReviewResult] = useState<AIReviewResult | null>(null);
+  const [showImproveDialog, setShowImproveDialog] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  
+  const { toast } = useToast();
   const template = TEMPLATES[selectedTemplate];
+
+  const improveMutation = useMutation({
+    mutationFn: async (data: { title: string; description: string; result?: string; deadline?: string; budget?: string; template: string }) => {
+      const res = await apiRequest("POST", "/api/ai/project/improve", data);
+      return res.json() as Promise<AIImproveResult>;
+    },
+    onSuccess: (data) => {
+      setAiImproveResult(data);
+      setShowImproveDialog(true);
+    },
+    onError: (err: any) => {
+      toast({ title: "Ошибка", description: err.message || "Не удалось улучшить ТЗ", variant: "destructive" });
+    },
+  });
+
+  const reviewMutation = useMutation({
+    mutationFn: async (data: { template: string; description: string; result?: string; deadline?: string; budget?: string }) => {
+      const res = await apiRequest("POST", "/api/ai/project/review", data);
+      return res.json() as Promise<AIReviewResult>;
+    },
+    onSuccess: (data) => {
+      setAiReviewResult(data);
+      setShowReviewDialog(true);
+    },
+    onError: (err: any) => {
+      toast({ title: "Ошибка", description: err.message || "Не удалось получить советы", variant: "destructive" });
+    },
+  });
+
+  const handleAIImprove = () => {
+    const values = form.getValues();
+    improveMutation.mutate({
+      title: values.title,
+      description: values.description,
+      result: values.expectedResult,
+      deadline: values.deadline,
+      budget: values.budget,
+      template: selectedTemplate,
+    });
+  };
+
+  const handleAIReview = () => {
+    const values = form.getValues();
+    reviewMutation.mutate({
+      template: selectedTemplate,
+      description: values.description,
+      result: values.expectedResult,
+      deadline: values.deadline,
+      budget: values.budget,
+    });
+  };
+
+  const applyImprovement = () => {
+    if (aiImproveResult) {
+      form.setValue("description", aiImproveResult.suggested_description);
+      form.setValue("expectedResult", aiImproveResult.suggested_result);
+      setShowImproveDialog(false);
+      toast({ title: "Улучшения применены" });
+    }
+  };
 
   const form = useForm({
     resolver: zodResolver(insertProjectSchema),
@@ -271,7 +352,29 @@ export default function CreateProject() {
                     </div>
                   </div>
 
-                  <div className="pt-4 flex justify-end">
+                  <div className="pt-4 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={handleAIImprove}
+                        disabled={improveMutation.isPending}
+                        data-testid="button-ai-improve"
+                      >
+                        {improveMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                        Сделать структурнее
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={handleAIReview}
+                        disabled={reviewMutation.isPending}
+                        data-testid="button-ai-review"
+                      >
+                        {reviewMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Lightbulb className="w-4 h-4 mr-2" />}
+                        Совет по ТЗ
+                      </Button>
+                    </div>
                     <Button 
                       type="submit" 
                       size="lg" 
@@ -289,6 +392,82 @@ export default function CreateProject() {
           </Card>
         </div>
       </main>
+
+      <Dialog open={showImproveDialog} onOpenChange={setShowImproveDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Предложенные улучшения</DialogTitle>
+            <DialogDescription>Просмотрите предложенные изменения и примените, если они вам подходят.</DialogDescription>
+          </DialogHeader>
+          {aiImproveResult && (
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенное описание:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_description}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенный ожидаемый результат:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_result}</p>
+              </div>
+              {aiImproveResult.improvements.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Рекомендации:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiImproveResult.improvements.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {aiImproveResult.missing_info.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Что ещё добавить:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiImproveResult.missing_info.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImproveDialog(false)}>Отмена</Button>
+            <Button onClick={applyImprovement} data-testid="button-apply-improvement">Применить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Советы по ТЗ</DialogTitle>
+            <DialogDescription>Рекомендации для улучшения вашего технического задания.</DialogDescription>
+          </DialogHeader>
+          {aiReviewResult && (
+            <div className="space-y-4">
+              {aiReviewResult.improvements.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Рекомендации:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiReviewResult.improvements.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {aiReviewResult.missing_info.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Что ещё добавить:</h4>
+                  <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                    {aiReviewResult.missing_info.map((item, i) => <li key={i}>{item}</li>)}
+                  </ul>
+                </div>
+              )}
+              {aiReviewResult.improvements.length === 0 && aiReviewResult.missing_info.length === 0 && (
+                <p className="text-sm text-muted-foreground">Ваше ТЗ выглядит хорошо!</p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowReviewDialog(false)}>Закрыть</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

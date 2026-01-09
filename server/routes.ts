@@ -7,6 +7,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import bcrypt from "bcryptjs";
 import { OFFER_STATUSES, type OfferStatus } from "@shared/schema";
+import { checkRateLimit, improveProject, reviewProject, improveOffer, reviewOffer } from "./ai";
 
 // Extend session type
 declare module "express-session" {
@@ -284,6 +285,137 @@ export async function registerRoutes(
       } else {
         console.error("Bulk delete error:", err);
         res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  // === AI Routes ===
+
+  const projectImproveSchema = z.object({
+    title: z.string(),
+    description: z.string(),
+    result: z.string().optional(),
+    deadline: z.string().optional(),
+    budget: z.string().optional(),
+    template: z.string(),
+  });
+
+  const projectReviewSchema = z.object({
+    template: z.string(),
+    description: z.string(),
+    result: z.string().optional(),
+    deadline: z.string().optional(),
+    budget: z.string().optional(),
+  });
+
+  const offerImproveSchema = z.object({
+    project: z.object({
+      title: z.string(),
+      description: z.string(),
+      result: z.string().optional(),
+    }),
+    offer: z.object({
+      approach: z.string(),
+      deadline: z.string(),
+      price: z.string(),
+      guarantees: z.string().optional(),
+      risks: z.string().optional(),
+    }),
+    template: z.string(),
+  });
+
+  const offerReviewSchema = z.object({
+    project: z.object({
+      title: z.string(),
+      description: z.string(),
+      result: z.string().optional(),
+    }),
+    offer: z.object({
+      approach: z.string(),
+      deadline: z.string(),
+      price: z.string(),
+      guarantees: z.string().optional(),
+      risks: z.string().optional(),
+    }),
+    template: z.string(),
+  });
+
+  app.post("/api/ai/project/improve", async (req, res) => {
+    try {
+      const sessionId = req.session.id || "anonymous";
+      if (!checkRateLimit(sessionId)) {
+        return res.status(429).json({ message: "Превышен лимит запросов. Попробуйте позже." });
+      }
+
+      const input = projectImproveSchema.parse(req.body);
+      const result = await improveProject(input);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("AI project improve error:", err);
+        res.status(500).json({ message: "Ошибка AI. Попробуйте позже." });
+      }
+    }
+  });
+
+  app.post("/api/ai/project/review", async (req, res) => {
+    try {
+      const sessionId = req.session.id || "anonymous";
+      if (!checkRateLimit(sessionId)) {
+        return res.status(429).json({ message: "Превышен лимит запросов. Попробуйте позже." });
+      }
+
+      const input = projectReviewSchema.parse(req.body);
+      const result = await reviewProject(input);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("AI project review error:", err);
+        res.status(500).json({ message: "Ошибка AI. Попробуйте позже." });
+      }
+    }
+  });
+
+  app.post("/api/ai/offer/improve", async (req, res) => {
+    try {
+      const sessionId = req.session.id || "anonymous";
+      if (!checkRateLimit(sessionId)) {
+        return res.status(429).json({ message: "Превышен лимит запросов. Попробуйте позже." });
+      }
+
+      const input = offerImproveSchema.parse(req.body);
+      const result = await improveOffer(input);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("AI offer improve error:", err);
+        res.status(500).json({ message: "Ошибка AI. Попробуйте позже." });
+      }
+    }
+  });
+
+  app.post("/api/ai/offer/review", async (req, res) => {
+    try {
+      const sessionId = req.session.id || "anonymous";
+      if (!checkRateLimit(sessionId)) {
+        return res.status(429).json({ message: "Превышен лимит запросов. Попробуйте позже." });
+      }
+
+      const input = offerReviewSchema.parse(req.body);
+      const result = await reviewOffer(input);
+      res.json(result);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("AI offer review error:", err);
+        res.status(500).json({ message: "Ошибка AI. Попробуйте позже." });
       }
     }
   });
