@@ -48,12 +48,13 @@ import {
   Code2,
   Eye,
   Loader2,
+  List,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
-type ViewMode = "cards" | "table";
+type ViewMode = "cards" | "table" | "list";
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   new: "Новый",
@@ -216,6 +217,14 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
 
         <div className="flex items-center gap-2">
           <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="icon"
+            onClick={() => setViewMode("list")}
+            data-testid="button-view-list"
+          >
+            <List className="w-4 h-4" />
+          </Button>
+          <Button
             variant={viewMode === "cards" ? "default" : "outline"}
             size="icon"
             onClick={() => setViewMode("cards")}
@@ -275,7 +284,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
         </div>
       )}
 
-      {viewMode === "table" ? (
+      {viewMode === "table" && (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
@@ -339,7 +348,61 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
             </TableBody>
           </Table>
         </div>
-      ) : (
+      )}
+
+      {viewMode === "list" && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-3 py-2 border-b">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={toggleSelectAll}
+              data-testid="checkbox-list-select-all"
+            />
+            <span className="text-sm text-muted-foreground">Выбрать все</span>
+          </div>
+          {filteredOffers.map((offer) => (
+            <div
+              key={offer.id}
+              className="flex items-center gap-3 p-3 border rounded-lg hover-elevate cursor-pointer"
+              onClick={() => setOpenOffer(offer)}
+              data-testid={`list-offer-${offer.id}`}
+            >
+              <Checkbox
+                checked={selectedIds.has(offer.id)}
+                onCheckedChange={() => toggleSelect(offer.id)}
+                onClick={(e) => e.stopPropagation()}
+                data-testid={`checkbox-list-offer-${offer.id}`}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">{offer.freelancerName}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[offer.status as OfferStatus]}`}>
+                    {STATUS_LABELS[offer.status as OfferStatus]}
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground truncate">{offer.contact}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-semibold text-primary">{offer.price}</div>
+                <div className="text-xs text-muted-foreground">{offer.deadline}</div>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSingleDeleteId(offer.id);
+                }}
+                data-testid={`button-delete-list-offer-${offer.id}`}
+              >
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {viewMode === "cards" && (
         <div className="grid gap-6">
           {filteredOffers.map((offer) => (
             <Card key={offer.id} className="overflow-hidden border-l-4 border-l-primary/50 shadow-md" data-testid={`card-offer-${offer.id}`}>
