@@ -37,7 +37,6 @@ export async function registerRoutes(
 
   // Middleware to check if user is authenticated
   const requireAuth = (req: Request, res: Response, next: NextFunction) => {
-    console.log("requireAuth check - sessionId:", req.session.id, "userId:", req.session.userId);
     if (!req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -56,7 +55,6 @@ export async function registerRoutes(
       }
 
       req.session.userId = user.id;
-      console.log("Login: setting userId to", user.id, "sessionId:", req.session.id);
       
       // Save session explicitly before responding
       req.session.save((err) => {
@@ -64,7 +62,6 @@ export async function registerRoutes(
           console.error("Session save error:", err);
           return res.status(500).json({ message: "Session error" });
         }
-        console.log("Session saved successfully for user", user!.id);
         res.json(user);
       });
     } catch (err) {

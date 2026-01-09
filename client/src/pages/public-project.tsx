@@ -55,18 +55,35 @@ export default function PublicProject() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-        <Card className="max-w-md w-full text-center p-8 shadow-2xl">
-          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
-            <CheckCircle2 className="w-8 h-8" />
-          </div>
-          <h2 className="text-3xl font-display font-bold mb-4">Офер отправлен!</h2>
-          <p className="text-muted-foreground mb-8">
-            Ваше предложение успешно отправлено клиенту. Он свяжется с вами, если оно его заинтересует.
-          </p>
-          <Button onClick={() => window.location.reload()} variant="outline">
-            Отправить еще один офер
-          </Button>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 p-4">
+        <Card className="max-w-lg w-full shadow-2xl border-0">
+          <CardContent className="p-10 text-center">
+            <div className="mx-auto w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-8 shadow-lg shadow-green-500/30">
+              <CheckCircle2 className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-3xl font-display font-bold mb-4 text-foreground">Офер отправлен!</h2>
+            <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+              Ваше предложение успешно отправлено заказчику. Ожидайте ответа — он свяжется с вами, если ваше предложение его заинтересует.
+            </p>
+            <div className="space-y-4">
+              <div className="bg-muted/50 rounded-lg p-4 text-left">
+                <h4 className="font-semibold mb-2 text-sm">Что дальше?</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Заказчик получит уведомление о вашем офере</li>
+                  <li>• Он свяжется с вами по указанным контактам</li>
+                  <li>• Обычно ответ приходит в течение 1-3 дней</li>
+                </ul>
+              </div>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                className="w-full"
+                data-testid="button-send-another-offer"
+              >
+                Отправить еще один офер
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
