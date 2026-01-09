@@ -49,12 +49,29 @@ import {
   Eye,
   Loader2,
   List,
+  ArrowUpDown,
+  Copy,
+  MessageCircle,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 type ViewMode = "cards" | "table" | "list";
+type SortField = "date" | "price" | "deadline";
+type SortDir = "asc" | "desc";
+
+const SORT_LABELS: Record<SortField, string> = {
+  date: "По дате",
+  price: "По цене",
+  deadline: "По сроку",
+};
+
+function extractNumber(str: string): number {
+  const match = str.match(/[\d\s]+/);
+  if (!match) return 0;
+  return parseInt(match[0].replace(/\s/g, ""), 10) || 0;
+}
 
 const STATUS_LABELS: Record<OfferStatus, string> = {
   new: "Новый",
@@ -74,8 +91,15 @@ interface OffersTableProps {
 }
 
 export function OffersTable({ offers, projectId }: OffersTableProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const storageKey = `offers_view_mode_project_${projectId}`;
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved === "cards" || saved === "table" || saved === "list") return saved;
+    return offers.length > 10 ? "table" : "cards";
+  });
   const [statusFilter, setStatusFilter] = useState<OfferStatus | "all">("all");
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [openOffer, setOpenOffer] = useState<Offer | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -83,6 +107,10 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, viewMode);
+  }, [viewMode, storageKey]);
 
   useEffect(() => {
     if (openOffer) {
@@ -99,6 +127,26 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
     if (statusFilter === "all") return offers;
     return offers.filter((o) => o.status === statusFilter);
   }, [offers, statusFilter]);
+
+  const sortedOffers = useMemo(() => {
+    const sorted = [...filteredOffers].sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "date") {
+        cmp = a.id - b.id;
+      } else if (sortField === "price") {
+        cmp = extractNumber(a.price) - extractNumber(b.price);
+      } else if (sortField === "deadline") {
+        cmp = a.deadline.localeCompare(b.deadline);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filteredOffers, sortField, sortDir]);
+
+  const copyContact = (contact: string) => {
+    navigator.clipboard.writeText(contact);
+    toast({ title: "Контакт скопирован" });
+  };
 
   const allSelected = filteredOffers.length > 0 && filteredOffers.every((o) => selectedIds.has(o.id));
   const someSelected = selectedIds.size > 0;
@@ -117,7 +165,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredOffers.map((o) => o.id)));
+      setSelectedIds(new Set(sortedOffers.map((o) => o.id)));
     }
   };
 
@@ -201,7 +249,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as OfferStatus | "all")}>
             <SelectTrigger className="w-[160px]" data-testid="select-status-filter">
               <SelectValue placeholder="Фильтр по статусу" />
@@ -213,6 +261,25 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
               ))}
             </SelectContent>
           </Select>
+          <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
+            <SelectTrigger className="w-[140px]" data-testid="select-sort-field">
+              <ArrowUpDown className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(SORT_LABELS) as SortField[]).map((s) => (
+                <SelectItem key={s} value={s}>{SORT_LABELS[s]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSortDir(sortDir === "asc" ? "desc" : "asc")}
+            data-testid="button-sort-dir"
+          >
+            {sortDir === "asc" ? "↑" : "↓"}
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -305,7 +372,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOffers.map((offer) => (
+              {sortedOffers.map((offer) => (
                 <TableRow key={offer.id} data-testid={`row-offer-${offer.id}`}>
                   <TableCell>
                     <Checkbox
@@ -315,7 +382,20 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                     />
                   </TableCell>
                   <TableCell className="font-medium">{offer.freelancerName}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{offer.contact}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground text-sm truncate max-w-[120px]">{offer.contact}</span>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6"
+                        onClick={(e) => { e.stopPropagation(); copyContact(offer.contact); }}
+                        data-testid={`button-copy-contact-${offer.id}`}
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
                   <TableCell className="font-semibold text-primary">{offer.price}</TableCell>
                   <TableCell>{offer.deadline}</TableCell>
                   <TableCell>
@@ -360,7 +440,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
             />
             <span className="text-sm text-muted-foreground">Выбрать все</span>
           </div>
-          {filteredOffers.map((offer) => (
+          {sortedOffers.map((offer) => (
             <div
               key={offer.id}
               className="flex items-center gap-3 p-3 border rounded-lg hover-elevate cursor-pointer"
@@ -404,7 +484,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
 
       {viewMode === "cards" && (
         <div className="grid gap-6">
-          {filteredOffers.map((offer) => (
+          {sortedOffers.map((offer) => (
             <Card key={offer.id} className="overflow-hidden border-l-4 border-l-primary/50 shadow-md" data-testid={`card-offer-${offer.id}`}>
               <CardHeader className="bg-muted/10 pb-4">
                 <div className="flex justify-between items-start gap-4">
@@ -497,8 +577,37 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
             <>
               <SheetHeader>
                 <SheetTitle className="text-2xl">{openOffer.freelancerName}</SheetTitle>
-                <SheetDescription>{openOffer.contact}</SheetDescription>
+                <SheetDescription className="flex items-center gap-2">
+                  <span>{openOffer.contact}</span>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={() => copyContact(openOffer.contact)}
+                    data-testid="button-copy-contact-sheet"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                </SheetDescription>
               </SheetHeader>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => copyContact(openOffer.contact)}
+                  className="flex-1"
+                  data-testid="button-contact-offer"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Связаться
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSingleDeleteId(openOffer.id)}
+                  data-testid="button-delete-offer-sheet"
+                >
+                  <Trash2 className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
               <div className="mt-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
