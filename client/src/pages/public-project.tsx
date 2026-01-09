@@ -3,16 +3,25 @@ import { useCreateOffer } from "@/hooks/use-offers";
 import { useRoute } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertOfferSchema } from "@shared/schema";
+import { insertOfferSchema, TEMPLATES, type TemplateType } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CheckCircle2, DollarSign, Loader2, Send } from "lucide-react";
+import { Calendar, CheckCircle2, DollarSign, Loader2, Send, Video, Palette, TrendingUp, Code, PenLine, Puzzle } from "lucide-react";
+
+const TEMPLATE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Video, Palette, TrendingUp, Code, PenLine, Puzzle
+};
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+
+function getOfferHints(templateType: string | null | undefined) {
+  const type = (templateType || "universal") as TemplateType;
+  return TEMPLATES[type]?.offerHints || TEMPLATES.universal.offerHints;
+}
 
 export default function PublicProject() {
   const [, params] = useRoute("/p/:token");
@@ -20,6 +29,8 @@ export default function PublicProject() {
   const { data: project, isLoading: isLoadingProject } = usePublicProject(token);
   const { mutate: createOffer, isPending: isSubmitting, isSuccess } = useCreateOffer(token);
   const [activeSection, setActiveSection] = useState<'brief' | 'offer'>('brief');
+  
+  const offerHints = getOfferHints(project?.templateType);
 
   const form = useForm({
     resolver: zodResolver(insertOfferSchema),
@@ -109,7 +120,19 @@ export default function PublicProject() {
       <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
         <section className="space-y-8 animate-in">
           <div>
-            <Badge variant="outline" className="mb-4">ТЗ проекта</Badge>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <Badge variant="outline">ТЗ проекта</Badge>
+              {project.templateType && project.templateType !== "universal" && (() => {
+                const template = TEMPLATES[project.templateType as TemplateType];
+                const IconComponent = template ? TEMPLATE_ICONS[template.iconName] : null;
+                return (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    {IconComponent && <IconComponent className="w-3 h-3" />}
+                    {template?.name}
+                  </Badge>
+                );
+              })()}
+            </div>
             <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight mb-6 text-foreground">
               {project.title}
             </h1>
@@ -223,9 +246,10 @@ export default function PublicProject() {
                           <FormLabel>Ваш подход</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Как вы планируете реализовать проект?" 
+                              placeholder={offerHints.approach}
                               className="min-h-[150px]"
                               {...field} 
+                              data-testid="input-offer-approach"
                             />
                           </FormControl>
                           <FormMessage />
@@ -241,7 +265,11 @@ export default function PublicProject() {
                           <FormItem>
                             <FormLabel>Общая стоимость</FormLabel>
                             <FormControl>
-                              <Input placeholder="Напр. 50,000 руб." {...field} />
+                              <Input 
+                                placeholder={offerHints.price} 
+                                {...field} 
+                                data-testid="input-offer-price"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -254,7 +282,11 @@ export default function PublicProject() {
                           <FormItem>
                             <FormLabel>Срок выполнения</FormLabel>
                             <FormControl>
-                              <Input placeholder="Напр. 10 дней" {...field} />
+                              <Input 
+                                placeholder={offerHints.deadline} 
+                                {...field} 
+                                data-testid="input-offer-deadline"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -270,9 +302,10 @@ export default function PublicProject() {
                           <FormLabel>Гарантии (необязательно)</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Напр. 3 этапа правок включены" 
+                              placeholder={offerHints.guarantees}
                               className="min-h-[80px]"
                               {...field} 
+                              data-testid="input-offer-guarantees"
                             />
                           </FormControl>
                           <FormMessage />
@@ -288,9 +321,10 @@ export default function PublicProject() {
                           <FormLabel>Возможные риски (необязательно)</FormLabel>
                           <FormControl>
                             <Textarea 
-                              placeholder="Какие могут возникнуть сложности?" 
+                              placeholder={offerHints.risks}
                               className="min-h-[80px]"
                               {...field} 
+                              data-testid="input-offer-risks"
                             />
                           </FormControl>
                           <FormMessage />
