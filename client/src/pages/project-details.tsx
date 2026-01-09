@@ -1,7 +1,7 @@
 import { useProjectDetails } from "@/hooks/use-projects";
 import { Sidebar } from "@/components/Sidebar";
 import { Link, useRoute } from "wouter";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -15,13 +15,10 @@ import {
   ExternalLink,
   Copy,
   Loader2,
-  Link2,
-  Briefcase,
-  Code2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmptyState } from "@/components/EmptyState";
-import { format } from "date-fns";
+import { OffersTable } from "@/components/OffersTable";
 
 export default function ProjectDetails() {
   const [, params] = useRoute("/projects/:id");
@@ -119,82 +116,7 @@ export default function ProjectDetails() {
                   description="Поделитесь публичной ссылкой с исполнителями, чтобы начать получать предложения."
                 />
               ) : (
-                <div className="grid gap-6">
-                  {project.offers.map((offer) => (
-                    <Card key={offer.id} className="overflow-hidden border-l-4 border-l-primary/50 shadow-md hover:shadow-lg transition-shadow">
-                      <CardHeader className="bg-muted/10 pb-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xl font-bold font-display">{offer.freelancerName}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{offer.contact}</p>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-primary">{offer.price}</div>
-                            <div className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Цена</div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <Separator />
-                      <CardContent className="pt-6 grid md:grid-cols-3 gap-8">
-                        <div className="md:col-span-2 space-y-4">
-                          {offer.portfolioLinks && (
-                            <div className="flex items-start gap-2">
-                              <Link2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                              <div>
-                                <h4 className="font-semibold mb-1 text-sm">Портфолио</h4>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.portfolioLinks}</p>
-                              </div>
-                            </div>
-                          )}
-                          {offer.experience && (
-                            <div className="flex items-start gap-2">
-                              <Briefcase className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                              <div>
-                                <h4 className="font-semibold mb-1 text-sm">Опыт</h4>
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.experience}</p>
-                              </div>
-                            </div>
-                          )}
-                          {offer.skills && (
-                            <div className="flex items-start gap-2">
-                              <Code2 className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
-                              <div>
-                                <h4 className="font-semibold mb-1 text-sm">Навыки</h4>
-                                <p className="text-sm text-muted-foreground">{offer.skills}</p>
-                              </div>
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-semibold mb-2 text-sm uppercase tracking-wide text-muted-foreground">Подход к работе</h4>
-                            <p className="whitespace-pre-wrap leading-relaxed">{offer.approach}</p>
-                          </div>
-                          {offer.guarantees && (
-                            <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-100 dark:border-green-900/50">
-                              <h4 className="font-semibold text-green-700 dark:text-green-400 mb-1 text-sm flex items-center">
-                                <CheckCircle2 className="w-4 h-4 mr-2" />
-                                Гарантии
-                              </h4>
-                              <p className="text-green-800 dark:text-green-300 text-sm">{offer.guarantees}</p>
-                            </div>
-                          )}
-                        </div>
-                        <div className="space-y-6 bg-muted/20 p-6 rounded-lg h-fit">
-                          <div>
-                            <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Предлагаемый срок</h4>
-                            <p className="font-medium">{offer.deadline}</p>
-                          </div>
-                          {offer.risks && (
-                            <div>
-                              <h4 className="font-semibold mb-1 text-xs uppercase tracking-wide text-muted-foreground">Выявленные риски</h4>
-                              <p className="text-sm text-muted-foreground">{offer.risks}</p>
-                            </div>
-                          )}
-                          <Button className="w-full">Связаться</Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                <OffersTable offers={project.offers} projectId={project.id} />
               )}
             </TabsContent>
 

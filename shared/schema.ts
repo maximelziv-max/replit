@@ -234,7 +234,8 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export const insertOfferSchema = createInsertSchema(offers).omit({ 
   id: true, 
   projectId: true, 
-  createdAt: true 
+  createdAt: true,
+  status: true
 });
 
 // === TYPES ===

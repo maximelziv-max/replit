@@ -1,7 +1,7 @@
 import { db } from "./db";
 import {
   users, projects, offers,
-  type User, type InsertUser,
+  type User,
   type Project, type InsertProject,
   type Offer, type InsertOffer,
   type OfferStatus
@@ -32,6 +32,10 @@ export interface IStorage {
   // Bulk operations
   updateOffersStatus(offerIds: number[], status: OfferStatus): Promise<Offer[]>;
   deleteOffers(offerIds: number[]): Promise<{ deleted: number }>;
+  
+  // Authorization
+  getOfferWithProject(offerId: number): Promise<{ offer: Offer; project: Project } | undefined>;
+  verifyOffersOwnership(offerIds: number[], userId: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -144,6 +148,25 @@ export class DatabaseStorage implements IStorage {
     if (offerIds.length === 0) return { deleted: 0 };
     const result = await db.delete(offers).where(inArray(offers.id, offerIds)).returning();
     return { deleted: result.length };
+  }
+
+  // === Authorization ===
+  async getOfferWithProject(offerId: number): Promise<{ offer: Offer; project: Project } | undefined> {
+    const [offer] = await db.select().from(offers).where(eq(offers.id, offerId));
+    if (!offer) return undefined;
+    const [project] = await db.select().from(projects).where(eq(projects.id, offer.projectId));
+    if (!project) return undefined;
+    return { offer, project };
+  }
+
+  async verifyOffersOwnership(offerIds: number[], userId: number): Promise<boolean> {
+    if (offerIds.length === 0) return true;
+    const offersList = await db.select().from(offers).where(inArray(offers.id, offerIds));
+    if (offersList.length !== offerIds.length) return false;
+    const projectIdsSet = new Set(offersList.map(o => o.projectId));
+    const projectIds = Array.from(projectIdsSet);
+    const projectsList = await db.select().from(projects).where(inArray(projects.id, projectIds));
+    return projectsList.every(p => p.userId === userId);
   }
 }
 

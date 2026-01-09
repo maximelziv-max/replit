@@ -192,6 +192,15 @@ export async function registerRoutes(
     try {
       const offerId = Number(req.params.id);
       const { status } = offerStatusSchema.parse(req.body);
+      
+      const result = await storage.getOfferWithProject(offerId);
+      if (!result) {
+        return res.status(404).json({ message: "Офер не найден" });
+      }
+      if (result.project.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Нет доступа" });
+      }
+      
       const offer = await storage.updateOfferStatus(offerId, status);
       res.json(offer);
     } catch (err) {
@@ -207,6 +216,15 @@ export async function registerRoutes(
   app.delete("/api/offers/:id", requireAuth, async (req, res) => {
     try {
       const offerId = Number(req.params.id);
+      
+      const result = await storage.getOfferWithProject(offerId);
+      if (!result) {
+        return res.status(404).json({ message: "Офер не найден" });
+      }
+      if (result.project.userId !== req.session.userId) {
+        return res.status(403).json({ message: "Нет доступа" });
+      }
+      
       await storage.deleteOffer(offerId);
       res.json({ success: true });
     } catch (err) {
@@ -229,6 +247,12 @@ export async function registerRoutes(
   app.patch("/api/offers/bulk/status", requireAuth, async (req, res) => {
     try {
       const { offerIds, status } = bulkStatusSchema.parse(req.body);
+      
+      const isOwner = await storage.verifyOffersOwnership(offerIds, req.session.userId!);
+      if (!isOwner) {
+        return res.status(403).json({ message: "Нет доступа к некоторым оферам" });
+      }
+      
       const offers = await storage.updateOffersStatus(offerIds, status);
       res.json(offers);
     } catch (err) {
@@ -245,6 +269,12 @@ export async function registerRoutes(
   app.delete("/api/offers/bulk", requireAuth, async (req, res) => {
     try {
       const { offerIds } = bulkDeleteSchema.parse(req.body);
+      
+      const isOwner = await storage.verifyOffersOwnership(offerIds, req.session.userId!);
+      if (!isOwner) {
+        return res.status(403).json({ message: "Нет доступа к некоторым оферам" });
+      }
+      
       const result = await storage.deleteOffers(offerIds);
       res.json(result);
     } catch (err) {
