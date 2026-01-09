@@ -95,7 +95,7 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved === "cards" || saved === "table" || saved === "list") return saved;
-    return offers.length > 10 ? "table" : "cards";
+    return "table";
   });
   const [statusFilter, setStatusFilter] = useState<OfferStatus | "all">("all");
   const [sortField, setSortField] = useState<SortField>("date");
@@ -282,30 +282,34 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("list")}
-            data-testid="button-view-list"
-          >
-            <List className="w-4 h-4" />
-          </Button>
-          <Button
-            variant={viewMode === "cards" ? "default" : "outline"}
-            size="icon"
-            onClick={() => setViewMode("cards")}
-            data-testid="button-view-cards"
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-muted-foreground mr-1">Вид:</span>
           <Button
             variant={viewMode === "table" ? "default" : "outline"}
-            size="icon"
+            size="sm"
             onClick={() => setViewMode("table")}
             data-testid="button-view-table"
           >
-            <TableIcon className="w-4 h-4" />
+            <TableIcon className="w-4 h-4 mr-1" />
+            Таблица
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            data-testid="button-view-list"
+          >
+            <List className="w-4 h-4 mr-1" />
+            Список
+          </Button>
+          <Button
+            variant={viewMode === "cards" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("cards")}
+            data-testid="button-view-cards"
+          >
+            <LayoutGrid className="w-4 h-4 mr-1" />
+            Карточки
           </Button>
         </div>
       </div>

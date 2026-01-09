@@ -23,9 +23,11 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 interface AIOfferImproveResult {
-  suggested_approach: string;
-  suggested_experience: string;
-  suggested_guarantees: string;
+  suggested_offer: {
+    approach: string;
+    guarantees: string;
+    risks: string;
+  };
   improvements: string[];
 }
 
@@ -70,7 +72,11 @@ export default function PublicProject() {
   });
 
   const improveMutation = useMutation({
-    mutationFn: async (data: { approach: string; experience: string; skills: string; guarantees?: string; projectDescription: string }) => {
+    mutationFn: async (data: {
+      project: { title: string; description: string; result?: string };
+      offer: { approach: string; deadline: string; price: string; guarantees?: string; risks?: string };
+      template: string;
+    }) => {
       const res = await apiRequest("POST", "/api/ai/offer/improve", data);
       return res.json() as Promise<AIOfferImproveResult>;
     },
@@ -84,7 +90,11 @@ export default function PublicProject() {
   });
 
   const reviewMutation = useMutation({
-    mutationFn: async (data: { approach: string; experience: string; skills: string; guarantees?: string; projectDescription: string }) => {
+    mutationFn: async (data: {
+      project: { title: string; description: string; result?: string };
+      offer: { approach: string; deadline: string; price: string; guarantees?: string; risks?: string };
+      template: string;
+    }) => {
       const res = await apiRequest("POST", "/api/ai/offer/review", data);
       return res.json() as Promise<AIOfferReviewResult>;
     },
@@ -100,30 +110,46 @@ export default function PublicProject() {
   const handleAIImprove = () => {
     const values = form.getValues();
     improveMutation.mutate({
-      approach: values.approach,
-      experience: values.experience || "",
-      skills: values.skills || "",
-      guarantees: values.guarantees,
-      projectDescription: project?.description || "",
+      project: {
+        title: project?.title || "",
+        description: project?.description || "",
+        result: project?.expectedResult || "",
+      },
+      offer: {
+        approach: values.approach,
+        deadline: values.deadline,
+        price: values.price,
+        guarantees: values.guarantees,
+        risks: values.risks,
+      },
+      template: project?.templateType || "universal",
     });
   };
 
   const handleAIReview = () => {
     const values = form.getValues();
     reviewMutation.mutate({
-      approach: values.approach,
-      experience: values.experience || "",
-      skills: values.skills || "",
-      guarantees: values.guarantees,
-      projectDescription: project?.description || "",
+      project: {
+        title: project?.title || "",
+        description: project?.description || "",
+        result: project?.expectedResult || "",
+      },
+      offer: {
+        approach: values.approach,
+        deadline: values.deadline,
+        price: values.price,
+        guarantees: values.guarantees,
+        risks: values.risks,
+      },
+      template: project?.templateType || "universal",
     });
   };
 
   const applyImprovement = () => {
     if (aiImproveResult) {
-      form.setValue("approach", aiImproveResult.suggested_approach);
-      form.setValue("experience", aiImproveResult.suggested_experience);
-      form.setValue("guarantees", aiImproveResult.suggested_guarantees);
+      form.setValue("approach", aiImproveResult.suggested_offer.approach);
+      form.setValue("guarantees", aiImproveResult.suggested_offer.guarantees);
+      form.setValue("risks", aiImproveResult.suggested_offer.risks);
       setShowImproveDialog(false);
       toast({ title: "Улучшения применены" });
     }
@@ -535,15 +561,15 @@ export default function PublicProject() {
             <div className="space-y-4">
               <div>
                 <h4 className="font-semibold mb-2">Улучшенный подход:</h4>
-                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_approach}</p>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">Улучшенный опыт:</h4>
-                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_experience}</p>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_offer.approach}</p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Улучшенные гарантии:</h4>
-                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_guarantees}</p>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_offer.guarantees}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Улучшенные риски:</h4>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg whitespace-pre-wrap">{aiImproveResult.suggested_offer.risks}</p>
               </div>
               {aiImproveResult.improvements.length > 0 && (
                 <div>
