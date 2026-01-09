@@ -20,8 +20,7 @@ async function seed() {
       criteria: ["Speed", "Quality"]
     });
     
-    await storage.createOffer({
-      projectId: project.id,
+    await storage.createOffer(project.id, {
       freelancerName: "Alice Dev",
       contact: "alice@example.com",
       approach: "I will use the T3 stack for rapid development.",

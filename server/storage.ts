@@ -1,4 +1,3 @@
-
 import { db } from "./db";
 import {
   users, projects, offers,
@@ -22,7 +21,7 @@ export interface IStorage {
   getProjectByToken(token: string): Promise<Project | undefined>;
 
   // Offers
-  createOffer(offer: InsertOffer): Promise<Offer>;
+  createOffer(projectId: number, offer: InsertOffer): Promise<Offer>;
   getProjectOffers(projectId: number): Promise<Offer[]>;
 }
 
@@ -49,7 +48,12 @@ export class DatabaseStorage implements IStorage {
     const publicToken = nanoid(10);
     
     const [newProject] = await db.insert(projects).values({
-      ...project,
+      title: project.title,
+      description: project.description,
+      expectedResult: project.expectedResult,
+      deadline: project.deadline,
+      budget: project.budget || null,
+      criteria: (project.criteria as string[]) || null,
       userId,
       publicToken,
       status: "open"
@@ -60,7 +64,6 @@ export class DatabaseStorage implements IStorage {
   async getUserProjects(userId: number): Promise<(Project & { offerCount: number })[]> {
     const userProjects = await db.select().from(projects).where(eq(projects.userId, userId)).orderBy(desc(projects.createdAt));
     
-    // This could be optimized with a join and group by, but for MVP loop is fine or we can use separate queries
     const result = [];
     for (const p of userProjects) {
       const [{ count: offerCount }] = await db
@@ -85,8 +88,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   // === Offers ===
-  async createOffer(insertOffer: InsertOffer): Promise<Offer> {
-    const [offer] = await db.insert(offers).values(insertOffer).returning();
+  async createOffer(projectId: number, insertOffer: InsertOffer): Promise<Offer> {
+    const [offer] = await db.insert(offers).values({
+      freelancerName: insertOffer.freelancerName,
+      contact: insertOffer.contact,
+      approach: insertOffer.approach,
+      deadline: insertOffer.deadline,
+      price: insertOffer.price,
+      guarantees: insertOffer.guarantees,
+      risks: insertOffer.risks,
+      projectId
+    }).returning();
     return offer;
   }
 

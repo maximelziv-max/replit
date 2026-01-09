@@ -26,7 +26,7 @@ export default function CreateProject() {
       expectedResult: "",
       deadline: "",
       budget: "",
-      criteria: [],
+      criteria: [] as string[],
     },
   });
 
@@ -34,7 +34,7 @@ export default function CreateProject() {
     if (newCriteria.trim()) {
       const updated = [...criteria, newCriteria.trim()];
       setCriteria(updated);
-      form.setValue("criteria", updated);
+      form.setValue("criteria", updated as string[]);
       setNewCriteria("");
     }
   };
@@ -42,7 +42,7 @@ export default function CreateProject() {
   const handleRemoveCriteria = (index: number) => {
     const updated = criteria.filter((_, i) => i !== index);
     setCriteria(updated);
-    form.setValue("criteria", updated);
+    form.setValue("criteria", updated as string[]);
   };
 
   const onSubmit = (data: any) => {

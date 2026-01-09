@@ -1,11 +1,17 @@
-
-import type { Express } from "express";
-import { createServer, type Server } from "http";
+import type { Express, Request, Response, NextFunction } from "express";
+import type { Server } from "http";
 import { storage } from "./storage";
 import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
+
+// Extend session type
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
 
 export async function registerRoutes(
   httpServer: Server,
@@ -22,13 +28,14 @@ export async function registerRoutes(
       checkPeriod: 86400000 // prune expired entries every 24h
     }),
     cookie: { 
-      secure: app.get("env") === "production",
+      secure: false, // Set to false for development
+      httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
     }
   }));
 
   // Middleware to check if user is authenticated
-  const requireAuth = (req: any, res: any, next: any) => {
+  const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     if (!req.session.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
@@ -47,12 +54,21 @@ export async function registerRoutes(
       }
 
       req.session.userId = user.id;
-      res.json(user);
+      
+      // Save session explicitly before responding
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        res.json(user);
+      });
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid input" });
       } else {
-        throw err;
+        console.error("Login error:", err);
+        res.status(500).json({ message: "Server error" });
       }
     }
   });
@@ -76,19 +92,21 @@ export async function registerRoutes(
   app.post(api.projects.create.path, requireAuth, async (req, res) => {
     try {
       const input = api.projects.create.input.parse(req.body);
-      const project = await storage.createProject(req.session.userId, input);
+      const project = await storage.createProject(req.session.userId!, input);
       res.status(201).json(project);
     } catch (err) {
       if (err instanceof z.ZodError) {
+        console.error("Validation error:", err.errors);
         res.status(400).json({ message: "Invalid input" });
       } else {
-        throw err;
+        console.error("Create project error:", err);
+        res.status(500).json({ message: "Server error" });
       }
     }
   });
 
   app.get(api.projects.listMy.path, requireAuth, async (req, res) => {
-    const projects = await storage.getUserProjects(req.session.userId);
+    const projects = await storage.getUserProjects(req.session.userId!);
     res.json(projects);
   });
 
@@ -131,17 +149,15 @@ export async function registerRoutes(
       }
 
       const input = api.offers.create.input.parse(req.body);
-      const offer = await storage.createOffer({
-        ...input,
-        projectId: project.id
-      });
+      const offer = await storage.createOffer(project.id, input);
       
       res.status(201).json(offer);
     } catch (err) {
       if (err instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid input" });
       } else {
-        throw err;
+        console.error("Create offer error:", err);
+        res.status(500).json({ message: "Server error" });
       }
     }
   });
