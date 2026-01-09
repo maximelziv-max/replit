@@ -356,11 +356,11 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
       )}
 
       {viewMode === "table" && (
-        <div className="border rounded-lg overflow-x-auto">
+        <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-10">
+                <TableHead className="w-8">
                   <Checkbox
                     checked={allSelected}
                     onCheckedChange={toggleSelectAll}
@@ -368,18 +368,20 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                   />
                 </TableHead>
                 <TableHead>Исполнитель</TableHead>
-                <TableHead>Контакт</TableHead>
-                <TableHead>Цена</TableHead>
-                <TableHead>Срок</TableHead>
-                <TableHead className="min-w-[180px]">Подход</TableHead>
-                <TableHead>Гарантии</TableHead>
-                <TableHead className="w-[100px]">Действия</TableHead>
+                <TableHead>Цена / Срок</TableHead>
+                <TableHead>Подход</TableHead>
+                <TableHead className="w-20">Действия</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sortedOffers.map((offer) => (
-                <TableRow key={offer.id} data-testid={`row-offer-${offer.id}`}>
-                  <TableCell>
+                <TableRow 
+                  key={offer.id} 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => setOpenOffer(offer)}
+                  data-testid={`row-offer-${offer.id}`}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.has(offer.id)}
                       onCheckedChange={() => toggleSelect(offer.id)}
@@ -389,49 +391,25 @@ export function OffersTable({ offers, projectId }: OffersTableProps) {
                   <TableCell>
                     <div>
                       <div className="font-medium">{offer.freelancerName}</div>
-                      {offer.skills && (
-                        <div className="text-xs text-muted-foreground truncate max-w-[150px]">{offer.skills}</div>
-                      )}
+                      <div className="text-xs text-muted-foreground">{offer.contact}</div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm truncate max-w-[140px]">{offer.contact}</span>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 shrink-0"
-                        onClick={(e) => { e.stopPropagation(); copyContact(offer.contact); }}
-                        title="Скопировать контакт"
-                        data-testid={`button-copy-contact-${offer.id}`}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold text-primary whitespace-nowrap">
-                    {offer.price || "По договорённости"}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap">
-                    {offer.deadline || "Не указан"}
+                    <div className="font-semibold text-primary">{offer.price || "Договорная"}</div>
+                    <div className="text-xs text-muted-foreground">{offer.deadline || "Срок не указан"}</div>
                   </TableCell>
                   <TableCell>
-                    <p className="text-sm text-muted-foreground line-clamp-2 max-w-[200px]">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {offer.approach || "Не описан"}
                     </p>
                   </TableCell>
-                  <TableCell>
-                    <p className="text-sm text-muted-foreground line-clamp-2 max-w-[150px]">
-                      {offer.guarantees || "Без гарантий"}
-                    </p>
-                  </TableCell>
-                  <TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <Button
                         size="icon"
                         variant="ghost"
                         onClick={() => setOpenOffer(offer)}
-                        title="Посмотреть оффер"
+                        title="Подробнее"
                         data-testid={`button-view-offer-${offer.id}`}
                       >
                         <Eye className="w-4 h-4" />
