@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, type LoginInput } from "@shared/routes";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 export function useAuth() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const { data: user, isLoading, error } = useQuery({
     queryKey: [api.auth.me.path],
@@ -19,6 +21,7 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginInput) => {
+      setLoginError(null);
       const res = await fetch(api.auth.login.path, {
         method: api.auth.login.method,
         headers: { "Content-Type": "application/json" },
@@ -27,26 +30,20 @@ export function useAuth() {
       });
       
       if (!res.ok) {
-        if (res.status === 400) {
-          throw new Error("Invalid username format");
-        }
-        throw new Error("Login failed");
+        const data = await res.json();
+        throw new Error(data.message || "Ошибка входа");
       }
       return api.auth.login.responses[200].parse(await res.json());
     },
     onSuccess: (data) => {
       queryClient.setQueryData([api.auth.me.path], data);
       toast({
-        title: "Welcome back!",
-        description: `Logged in as ${data.username}`,
+        title: "Добро пожаловать!",
+        description: `Вы вошли как ${data.username}`,
       });
     },
-    onError: (err) => {
-      toast({
-        title: "Login Failed",
-        description: err.message,
-        variant: "destructive",
-      });
+    onError: (err: Error) => {
+      setLoginError(err.message);
     },
   });
 
@@ -61,8 +58,8 @@ export function useAuth() {
       queryClient.setQueryData([api.auth.me.path], null);
       queryClient.clear();
       toast({
-        title: "Logged out",
-        description: "See you soon!",
+        title: "Вы вышли",
+        description: "До скорой встречи!",
       });
     },
   });
@@ -73,6 +70,7 @@ export function useAuth() {
     error,
     login: loginMutation.mutate,
     isLoggingIn: loginMutation.isPending,
+    loginError,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
   };

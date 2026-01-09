@@ -161,6 +161,7 @@ export const TEMPLATES = {
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -211,7 +212,9 @@ export const offersRelations = relations(offers, ({ one }) => ({
 
 // === SCHEMAS ===
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, passwordHash: true }).extend({
+  password: z.string().min(6, "Пароль слишком короткий (минимум 6 символов)"),
+});
 
 export const insertProjectSchema = createInsertSchema(projects).omit({ 
   id: true, 

@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import bcrypt from "bcryptjs";
 
 // Extend session type
 declare module "express-session" {
@@ -47,11 +48,20 @@ export async function registerRoutes(
 
   app.post(api.auth.login.path, async (req, res) => {
     try {
-      const { username } = api.auth.login.input.parse(req.body);
+      const { username, password } = api.auth.login.input.parse(req.body);
       
       let user = await storage.getUserByUsername(username);
+      
       if (!user) {
-        user = await storage.createUser({ username });
+        // Create new user with hashed password
+        const passwordHash = await bcrypt.hash(password, 10);
+        user = await storage.createUser({ username, passwordHash });
+      } else {
+        // Verify password for existing user
+        const validPassword = await bcrypt.compare(password, user.passwordHash);
+        if (!validPassword) {
+          return res.status(400).json({ message: "Неверный пароль" });
+        }
       }
 
       req.session.userId = user.id;
@@ -62,11 +72,14 @@ export async function registerRoutes(
           console.error("Session save error:", err);
           return res.status(500).json({ message: "Session error" });
         }
-        res.json(user);
+        // Don't send passwordHash to client
+        const { passwordHash: _, ...safeUser } = user!;
+        res.json(safeUser);
       });
     } catch (err) {
       if (err instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid input" });
+        const firstError = err.errors[0];
+        res.status(400).json({ message: firstError?.message || "Invalid input" });
       } else {
         console.error("Login error:", err);
         res.status(500).json({ message: "Server error" });

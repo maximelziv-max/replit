@@ -12,7 +12,7 @@ export interface IStorage {
   // Auth
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: { username: string; passwordHash: string }): Promise<User>;
 
   // Projects
   createProject(userId: number, project: InsertProject): Promise<Project>;
@@ -37,7 +37,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: { username: string; passwordHash: string }): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
