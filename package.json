@@ -22,6 +22,7 @@
     "esbuild": "^0.25.12",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "lucide-react": "^0.562.0",
     "nanoid": "^5.1.6",
     "openai": "^6.15.0",
     "passport": "^0.7.0",
