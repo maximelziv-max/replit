@@ -1,15 +1,38 @@
+import { Pool } from "pg";
 
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
-import * as schema from "@shared/schema";
-
-const { Pool } = pg;
-
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL must be set. Did you forget to provision a database?");
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle(pool, { schema });
+const url = new URL(databaseUrl);
+
+// hostname without port
+const host = url.hostname;
+const port = url.port ? parseInt(url.port, 10) : 5432;
+
+// IMPORTANT: decode credentials safely
+const user = decodeURIComponent(url.username);
+const password = decodeURIComponent(url.password);
+
+// pathname starts with "/"
+const database = url.pathname.startsWith("/")
+  ? url.pathname.slice(1)
+  : url.pathname;
+
+const sslmode = url.searchParams.get("sslmode") ?? "require";
+const ssl =
+  sslmode === "disable"
+    ? false
+    : {
+        rejectUnauthorized: false,
+      };
+
+export const pool = new Pool({
+  host,
+  port,
+  user,
+  password,
+  database,
+  ssl,
+});
