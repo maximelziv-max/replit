@@ -2,20 +2,19 @@ import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../shared/schema";
 
-// Проверка, что переменная окружения есть
-if (!process.env.DATABASE_URL) {
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
   throw new Error("DATABASE_URL is not defined");
 }
 
-// Создаём пул подключений к PostgreSQL
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: databaseUrl,
   ssl: {
-    rejectUnauthorized: false, // важно для Timeweb
+    rejectUnauthorized: false, // важно для Timeweb / self-signed cert
   },
 });
 
-// Инициализируем drizzle
 export const db = drizzle(pool, {
   schema,
   logger: true,
