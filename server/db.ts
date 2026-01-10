@@ -8,25 +8,44 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL must be set");
 }
 
-// корректно парсим DATABASE_URL
-const url = new URL(databaseUrl);
+// 1) Парсим DATABASE_URL безопасно и с понятной ошибкой
+let url: URL;
+try {
+  url = new URL(databaseUrl);
+} catch (e) {
+  console.error("❌ INVALID DATABASE_URL:", databaseUrl);
+  throw e;
+}
 
+// 2) Собираем параметры подключения (важно: decodeURIComponent!)
+const host = url.hostname;
+const port = url.port ? Number(url.port) : 5432;
+const user = decodeURIComponent(url.username);
+const password = decodeURIComponent(url.password);
+const database = url.pathname.startsWith("/") ? url.pathname.slice(1) : url.pathname;
+
+// 3) SSL для Timeweb/PaaS
+// Если sslmode=disable -> без SSL, иначе включаем SSL без проверки CA (это норм для PaaS)
+const sslmode = url.searchParams.get("sslmode") ?? "require";
+const ssl =
+  sslmode === "disable"
+    ? false
+    : {
+        rejectUnauthorized: false,
+      };
+
+// 4) Pool + Drizzle
 const pool = new Pool({
-  host: url.hostname,
-  port: url.port ? Number(url.port) : 5432,
-  user: decodeURIComponent(url.username),
-  password: decodeURIComponent(url.password),
-  database: url.pathname.startsWith("/")
-    ? url.pathname.slice(1)
-    : url.pathname,
-  ssl:
-    url.searchParams.get("sslmode") === "disable"
-      ? false
-      : { rejectUnauthorized: false },
+  host,
+  port,
+  user,
+  password,
+  database,
+  ssl,
 });
 
-// ✅ ЭТО ГЛАВНОЕ
+// ✅ Экспорт db (его ждёт storage.ts)
 export const db = drizzle(pool, { schema });
 
-// (опционально, но полезно)
+// (опционально) если где-то нужен pool напрямую
 export { pool };
