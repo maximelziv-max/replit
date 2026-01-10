@@ -1,0 +1,126 @@
+Вот готовое ТЗ для Replit, чтобы он сам исправил текущую ошибку сборки (PostCSS/Tailwind “Unexpected token” в client/src/index.css) и подготовил проект под Timeweb Cloud. Скопируй и вставь агенту целиком.
+
+⸻
+
+ТЗ для Replit AI / Agent: Fix Tailwind/PostCSS build for Timeweb
+
+Контекст:
+Сборка падает на npm run build с ошибкой:
+	•	[vite:css] [postcss] Unexpected token, expected ","
+	•	файл: client/src/index.css
+
+Цель:
+Сделать так, чтобы в чистом окружении выполнялось:
+
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+
+без ошибок, и проект был совместим с Timeweb Cloud (Node.js 20).
+
+⸻
+
+1) Привести PostCSS конфигурацию к рабочей
+
+Задача: проверить и исправить postcss.config.js в корне.
+
+Требование: файл должен быть CommonJS и минимальным:
+
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+	•	Запрещено использовать export default в postcss.config.js.
+	•	Запрещено использовать нестандартные форматы plugins (например массивы/строки), если это ломает парсинг.
+
+⸻
+
+2) Привести Tailwind к единому режиму (Tailwind v3 + PostCSS)
+
+Задача: убедиться, что проект использует Tailwind через PostCSS (как в index.css с @tailwind ...), и нет смешения Tailwind v4 (@tailwindcss/vite) с tailwind v3.
+
+Требование по зависимостям:
+	•	В dependencies должны быть установлены:
+	•	tailwindcss@3.4.17
+	•	postcss@8.4.47
+	•	autoprefixer@^10.4.20
+
+Если сейчас установлены другие версии, привести к указанным.
+
+⸻
+
+3) Проверить tailwind.config и плагины
+
+Задача: убедиться, что Tailwind конфиг читается корректно в production.
+
+Требование:
+	•	Допускается tailwind.config.cjs (предпочтительно для Timeweb).
+	•	Плагины должны существовать в зависимостях:
+	•	tailwindcss-animate
+	•	@tailwindcss/typography
+
+Если они используются в конфиге — они должны быть установлены (в dependencies, если сборка Timeweb ставит только prod).
+
+⸻
+
+4) Проверить client/src/index.css
+
+Задача: убедиться, что client/src/index.css — валидный CSS и корректно обрабатывается Tailwind/PostCSS.
+
+Требование: файл должен начинаться с:
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+и не содержать синтаксиса, который может быть воспринят как JS/TS.
+
+⸻
+
+5) Финальная проверка
+
+После правок агент обязан выполнить:
+
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+
+и убедиться, что сборка проходит.
+
+⸻
+
+6) Коммит изменений
+
+Агент должен:
+	•	перечислить изменённые файлы
+	•	закоммитить изменения в git (если доступно)
+	•	подготовить краткую инструкцию для Timeweb:
+
+Timeweb build:
+
+npm install --include=dev && npm run build
+
+Timeweb start:
+
+npm run start
+
+Health:
+
+/health
+
+
+⸻
+
+Важно (что НЕ делать)
+	•	Не менять структуру client/src/main.tsx и client/index.html.
+	•	Не ломать dev-запуск в Replit (npm run dev должен продолжить работать).
+	•	Не вводить временные хаки типа отключения CSS.
+
+⸻
+
+Если хочешь, я могу дополнить ТЗ командой: “проверь текущие версии tailwind/postcss в package.json и синхронизацию package-lock”, но и так агенту достаточно.
+
+Если агент после этого покажет ошибку снова — пришли сюда содержимое текущего postcss.config.js и package.json (версии tailwind/postcss/autoprefixer), и я дам точечную правку.
