@@ -58,9 +58,9 @@ export async function registerRoutes(
       if (!user) {
         // Create new user with hashed password
         const passwordHash = await bcrypt.hash(password, 10);
-        // Make admin007 an admin automatically
+        // Make "admin" an admin automatically
         user = await storage.createUser({ username, passwordHash });
-        if (username === "admin007") {
+        if (username === "admin") {
           user = await storage.updateUserRole(user.id, "admin");
         }
         isNewUser = true;
