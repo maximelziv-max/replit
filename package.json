@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.60.5",
+    "@vitejs/plugin-react": "^5.1.2",
     "bcryptjs": "^3.0.3",
     "connect-pg-simple": "^10.0.0",
     "drizzle-orm": "^0.39.3",
@@ -43,7 +44,6 @@
     "@types/passport": "^1.0.16",
     "@types/passport-local": "^1.0.38",
     "@types/ws": "^8.5.13",
-    "@vitejs/plugin-react": "^4.7.0",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.8",
     "postcss": "^8.4.47",
