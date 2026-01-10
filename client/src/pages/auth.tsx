@@ -39,7 +39,7 @@ export default function AuthPage() {
             <Sparkles className="w-6 h-6" />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-display font-bold">Добро пожаловать в Briefly</CardTitle>
+            <CardTitle className="text-2xl font-display font-bold">Добро пожаловать в HR - просто</CardTitle>
             <CardDescription className="text-base">
               Создавайте, делитесь и управляйте вашими ТЗ
             </CardDescription>

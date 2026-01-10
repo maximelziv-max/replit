@@ -1,8 +1,8 @@
-# Briefly - Project Brief Management Platform
+# HR - просто - Project Brief Management Platform
 
 ## Overview
 
-Briefly is an MVP marketplace platform for managing project briefs and freelancer offers. The application enables clients to create project specifications (ТЗ), generate shareable public links, and receive proposals from freelancers. Freelancers can access project briefs via public tokens and submit their offers without requiring authentication.
+HR - просто is an MVP marketplace platform for managing project briefs and freelancer offers. The application enables clients to create project specifications (ТЗ), generate shareable public links, and receive proposals from freelancers. Freelancers can access project briefs via public tokens and submit their offers without requiring authentication.
 
 **Core Features:**
 - Simple username-based authentication (no password required for MVP)

@@ -5,7 +5,8 @@ import {
   LayoutDashboard,
   PlusCircle,
   LogOut,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ export function Sidebar() {
   const links = [
     { href: "/", label: "Мои проекты", icon: LayoutDashboard },
     { href: "/projects/new", label: "Создать проект", icon: PlusCircle },
+    ...(user?.role === "admin" ? [{ href: "/admin", label: "Админ панель", icon: Shield }] : []),
   ];
 
   return (
@@ -24,7 +26,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2 text-primary">
           <Sparkles className="h-6 w-6" />
           <h1 className="font-display font-bold text-xl tracking-tight text-foreground">
-            Briefly
+            HR - просто
           </h1>
         </div>
       </div>

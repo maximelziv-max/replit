@@ -1,0 +1,314 @@
+Понял. Ниже — детальное ТЗ на админку с графиками, плюс вход через общую авторизацию (то есть отдельной /admin/login НЕ нужно — админ входит тем же логином/паролем, а дальше видит Admin Panel).
+Формат — под твой стек (React+Vite+TS / Express / Drizzle / shadcn).
+
+⸻
+
+ТЗ: Админка v1 (через общую панель) + графики + управление доступом
+
+0) Цель
+
+Сделать полноценный admin-раздел, где админ может:
+	•	видеть пользователей, проекты, оферы
+	•	смотреть активность и ключевые события
+	•	видеть графики (динамика)
+	•	блокировать/разблокировать пользователей
+	•	менять пароль пользователям (и себе)
+	•	управлять доступом
+
+Вход в админку через общий логин/пароль.
+Админ-аккаунт: admin007.
+
+⸻
+
+1) Авторизация и вход (через общую панель)
+
+1.1 Единый экран логина
+
+Используется уже существующая авторизация (username + password).
+
+1.2 Признак “админ”
+
+В users должен быть флаг:
+	•	role: "user" | "admin" (или isAdmin: boolean)
+
+Админ определяется по:
+	•	login === "admin007" → role = “admin” (MVP)
+или
+	•	хранится в БД (лучше)
+
+1.3 Навигация после входа
+
+После входа:
+	•	обычный пользователь попадает в /dashboard
+	•	админ попадает в /dashboard, но видит в боковом меню пункт:
+	•	Admin Panel
+При клике → /admin
+
+1.4 Защита маршрутов
+
+Все /admin/* доступны только если user.role === "admin"
+Иначе редирект /dashboard или 403.
+
+⸻
+
+2) Данные и БД (Drizzle)
+
+2.1 Users (расширить)
+
+В users добавить:
+	•	role text default “user”
+	•	isBlocked boolean default false
+	•	blockedAt datetime nullable
+	•	lastLoginAt datetime nullable
+	•	loginCount integer default 0 (опционально)
+
+2.2 Activity logs (обязательно для графиков)
+
+Создать activity_logs:
+	•	id
+	•	user_id nullable
+	•	event_type text (enum-like)
+	•	metadata json/text nullable
+	•	created_at datetime
+
+Event types (MVP)
+	•	user_login
+	•	project_created
+	•	offer_submitted
+	•	offer_deleted
+	•	offer_status_changed
+	•	ai_project_improve
+	•	ai_project_review
+	•	ai_offer_improve
+	•	ai_offer_review
+
+(можно расширять)
+
+⸻
+
+3) Логирование событий (server)
+
+В нужных endpoints добавлять запись в activity_logs:
+	•	при login → user_login + lastLoginAt + loginCount++
+	•	при создании проекта
+	•	при отправке офера
+	•	при удалении офера
+	•	при bulk-операциях (одна запись с metadata: idsCount)
+	•	при AI запросах (кто вызвал, какой тип)
+
+⸻
+
+4) Admin Panel (UI / страницы)
+
+4.1 /admin — Главная админка (Dashboard)
+
+Содержит:
+
+A) KPI карточки (верх)
+	•	Всего пользователей
+	•	Активные за 7 дней
+	•	Проекты всего
+	•	Проекты за 7 дней
+	•	Оферы всего
+	•	Оферы за 7 дней
+	•	AI-запросы за 7 дней
+
+Активные пользователи: lastLoginAt within 7 days.
+
+⸻
+
+B) Графики (середина)
+
+Использовать Recharts (если можно) или простые charts на frontend.
+
+График 1: Новые пользователи по дням (30 дней)
+	•	X: дата
+	•	Y: количество users.created_at
+
+График 2: Проекты по дням (30 дней)
+	•	X: дата
+	•	Y: projects.created_at
+
+График 3: Оферы по дням (30 дней)
+	•	X: дата
+	•	Y: offers.created_at
+
+График 4: Активность событий (stacked)
+	•	X: дата
+	•	Y: count событий
+	•	серии:
+	•	login
+	•	project_created
+	•	offer_submitted
+	•	ai_used
+
+(в MVP можно сделать 3 графика и 1 stacked)
+
+⸻
+
+C) Таблица “Последняя активность” (низ)
+
+Последние 50 событий:
+	•	дата/время
+	•	user (login или “anonymous”)
+	•	event_type
+	•	metadata (кратко)
+
+⸻
+
+4.2 /admin/users — Пользователи
+
+Таблица:
+	•	id
+	•	login
+	•	role
+	•	created_at
+	•	lastLoginAt
+	•	projects_count (агрегация)
+	•	offers_count (агрегация)
+	•	isBlocked
+
+Действия:
+	•	Block / Unblock
+	•	Reset password (задать новый)
+	•	Make admin / Remove admin (опционально)
+	•	View details
+
+Фильтры:
+	•	blocked / active
+	•	role admin/user
+	•	search by login
+
+⸻
+
+4.3 /admin/users/:id — карточка пользователя
+
+Показывает:
+	•	профиль пользователя
+	•	статистику:
+	•	кол-во проектов
+	•	кол-во оферов
+	•	AI usage count
+	•	график активности пользователя (7/30 дней):
+	•	logins per day
+	•	projects per day
+	•	offers per day
+	•	последние 50 событий из logs
+
+Действия:
+	•	Block / Unblock
+	•	Reset password
+	•	Force logout (опционально)
+
+⸻
+
+4.4 /admin/security — безопасность
+
+Раздел:
+
+A) Смена пароля админа
+
+Поля:
+	•	current password
+	•	new password
+	•	confirm
+
+B) Управление паролями пользователей
+	•	сброс пароля (через users list)
+	•	(опционально) генерация временного пароля
+
+⸻
+
+5) Admin API (server/routes.ts)
+
+5.1 Статистика / графики
+
+GET /api/admin/stats?days=7|30
+
+Возвращает:
+	•	totals: users/projects/offers
+	•	lastNDays aggregates (arrays):
+	•	usersPerDay[]
+	•	projectsPerDay[]
+	•	offersPerDay[]
+	•	eventsPerDay[] (grouped by event_type)
+
+Формат:
+
+{
+  "totals": {...},
+  "series": {
+    "usersPerDay": [{"date":"2026-01-01","count":3}],
+    "projectsPerDay": [...],
+    "offersPerDay": [...],
+    "eventsPerDay": [{"date":"...","login":5,"project_created":2,"offer_submitted":7,"ai_used":3}]
+  },
+  "recentEvents": [...]
+}
+
+5.2 Пользователи
+	•	GET /api/admin/users
+	•	поддержка query: search, role, blocked
+	•	GET /api/admin/users/:id
+	•	PATCH /api/admin/users/:id/block
+	•	PATCH /api/admin/users/:id/unblock
+	•	PATCH /api/admin/users/:id/role (optional)
+	•	POST /api/admin/users/:id/reset-password
+	•	body: { newPassword }
+
+5.3 Защита
+
+Все /api/admin/* защищены middleware:
+	•	requireAuth + requireAdmin
+
+⸻
+
+6) Влияние блокировки на систему
+
+Если user.isBlocked = true:
+	•	при login → отказ “Аккаунт заблокирован”
+	•	при любых API запросах → 403
+	•	в UI показывать “Заблокирован администратором”
+
+⸻
+
+7) Графики: библиотека и UI требования
+
+7.1 Библиотека
+
+Рекомендация: Recharts
+	•	LineChart для users/projects/offers
+	•	AreaChart/BarChart для событий
+
+7.2 UI
+	•	на главной /admin графики должны переключаться по периоду:
+	•	7 дней / 30 дней
+	•	hover tooltip с точным значением
+	•	легенда (если stacked)
+
+⸻
+
+8) Acceptance Criteria (готовность)
+
+Админка готова если:
+	1.	Админ входит через обычный логин, видит пункт Admin Panel
+	2.	/admin показывает KPI и 3+ графика за 7/30 дней
+	3.	Есть таблица последних событий
+	4.	/admin/users показывает список, фильтры, search
+	5.	Block/Unblock работает и влияет на доступ пользователя
+	6.	Reset password работает
+	7.	Все /admin и /api/admin защищены admin middleware
+	8.	Логи активности реально пишутся и питают графики
+
+⸻
+
+9) НЕ делать сейчас (чтобы не взорвать объём)
+	•	сложные BI-дашборды
+	•	экспорт CSV
+	•	настройка событий пользователем
+	•	multi-admin roles/permissions (можно позже)
+
+⸻
+
+Если хочешь, я сделаю следующий шаг:
+Super Prompt для Replit AI на админку, с указанием конкретных файлов/компонентов, чтобы он внёс это без хаоса.

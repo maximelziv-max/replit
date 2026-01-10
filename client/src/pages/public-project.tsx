@@ -206,7 +206,7 @@ export default function PublicProject() {
     <div className="min-h-screen bg-muted/30">
       <header className="bg-background border-b border-border/50 sticky top-0 z-10 backdrop-blur-sm bg-background/80">
         <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="font-display font-bold text-xl tracking-tight text-primary">Briefly</div>
+          <div className="font-display font-bold text-xl tracking-tight text-primary">HR - просто</div>
           <Button 
             onClick={() => {
               setActiveSection('offer');

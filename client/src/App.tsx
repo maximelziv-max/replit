@@ -12,6 +12,8 @@ import Dashboard from "@/pages/dashboard";
 import CreateProject from "@/pages/create-project";
 import ProjectDetails from "@/pages/project-details";
 import PublicProject from "@/pages/public-project";
+import AdminPage from "@/pages/admin";
+import AdminUsersPage from "@/pages/admin-users";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -47,6 +49,12 @@ function Router() {
       </Route>
       <Route path="/projects/:id">
         <ProtectedRoute component={ProjectDetails} />
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute component={AdminPage} />
+      </Route>
+      <Route path="/admin/users">
+        <ProtectedRoute component={AdminUsersPage} />
       </Route>
 
       <Route component={NotFound} />

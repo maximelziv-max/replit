@@ -1,8 +1,22 @@
 
-import { pgTable, text, serial, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// === ACTIVITY EVENT TYPES ===
+export const EVENT_TYPES = [
+  "user_login",
+  "project_created",
+  "offer_submitted",
+  "offer_deleted",
+  "offer_status_changed",
+  "ai_project_improve",
+  "ai_project_review",
+  "ai_offer_improve",
+  "ai_offer_review",
+] as const;
+export type EventType = typeof EVENT_TYPES[number];
 
 // === TEMPLATE TYPES ===
 
@@ -162,6 +176,19 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user"), // "user" | "admin"
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  blockedAt: timestamp("blocked_at"),
+  lastLoginAt: timestamp("last_login_at"),
+  loginCount: integer("login_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const activityLogs = pgTable("activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"), // nullable for anonymous events
+  eventType: text("event_type").notNull(), // EventType
+  metadata: jsonb("metadata").$type<Record<string, unknown>>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -219,8 +246,22 @@ export const offersRelations = relations(offers, ({ one }) => ({
 
 // === SCHEMAS ===
 
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, passwordHash: true }).extend({
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true, 
+  passwordHash: true,
+  role: true,
+  isBlocked: true,
+  blockedAt: true,
+  lastLoginAt: true,
+  loginCount: true,
+}).extend({
   password: z.string().min(6, "Пароль слишком короткий (минимум 6 символов)"),
+});
+
+export const insertActivityLogSchema = createInsertSchema(activityLogs).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertProjectSchema = createInsertSchema(projects).omit({ 
@@ -248,6 +289,9 @@ export type InsertProject = z.infer<typeof insertProjectSchema>;
 
 export type Offer = typeof offers.$inferSelect;
 export type InsertOffer = z.infer<typeof insertOfferSchema>;
+
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = z.infer<typeof insertActivityLogSchema>;
 
 // Custom types for API responses
 export type ProjectWithOffers = Project & { offers: Offer[] };

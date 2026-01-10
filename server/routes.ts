@@ -53,18 +53,34 @@ export async function registerRoutes(
       const { username, password } = api.auth.login.input.parse(req.body);
       
       let user = await storage.getUserByUsername(username);
+      let isNewUser = false;
       
       if (!user) {
         // Create new user with hashed password
         const passwordHash = await bcrypt.hash(password, 10);
+        // Make admin007 an admin automatically
         user = await storage.createUser({ username, passwordHash });
+        if (username === "admin007") {
+          user = await storage.updateUserRole(user.id, "admin");
+        }
+        isNewUser = true;
       } else {
+        // Check if user is blocked
+        if (user.isBlocked) {
+          return res.status(403).json({ message: "Аккаунт заблокирован администратором" });
+        }
         // Verify password for existing user
         const validPassword = await bcrypt.compare(password, user.passwordHash);
         if (!validPassword) {
           return res.status(400).json({ message: "Неверный пароль" });
         }
       }
+
+      // Update login stats
+      await storage.updateLoginStats(user.id);
+      
+      // Log activity
+      await storage.logActivity(user.id, "user_login", { isNewUser });
 
       req.session.userId = user.id;
       
@@ -114,6 +130,10 @@ export async function registerRoutes(
     try {
       const input = api.projects.create.input.parse(req.body);
       const project = await storage.createProject(req.session.userId!, input);
+      
+      // Log activity
+      await storage.logActivity(req.session.userId!, "project_created", { projectId: project.id, title: project.title });
+      
       res.status(201).json(project);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -171,6 +191,13 @@ export async function registerRoutes(
 
       const input = api.offers.create.input.parse(req.body);
       const offer = await storage.createOffer(project.id, input);
+      
+      // Log activity (anonymous since freelancers don't need to be logged in)
+      await storage.logActivity(null, "offer_submitted", { 
+        offerId: offer.id, 
+        projectId: project.id,
+        freelancerName: offer.freelancerName 
+      });
       
       res.status(201).json(offer);
     } catch (err) {
@@ -349,6 +376,10 @@ export async function registerRoutes(
 
       const input = projectImproveSchema.parse(req.body);
       const result = await improveProject(input);
+      
+      // Log AI activity
+      await storage.logActivity(req.session.userId || null, "ai_project_improve", { template: input.template });
+      
       res.json(result);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -369,6 +400,10 @@ export async function registerRoutes(
 
       const input = projectReviewSchema.parse(req.body);
       const result = await reviewProject(input);
+      
+      // Log AI activity
+      await storage.logActivity(req.session.userId || null, "ai_project_review", { template: input.template });
+      
       res.json(result);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -389,6 +424,10 @@ export async function registerRoutes(
 
       const input = offerImproveSchema.parse(req.body);
       const result = await improveOffer(input);
+      
+      // Log AI activity (anonymous since offers are submitted without login)
+      await storage.logActivity(null, "ai_offer_improve", { template: input.template });
+      
       res.json(result);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -409,6 +448,10 @@ export async function registerRoutes(
 
       const input = offerReviewSchema.parse(req.body);
       const result = await reviewOffer(input);
+      
+      // Log AI activity (anonymous since offers are submitted without login)
+      await storage.logActivity(null, "ai_offer_review", { template: input.template });
+      
       res.json(result);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -416,6 +459,116 @@ export async function registerRoutes(
       } else {
         console.error("AI offer review error:", err);
         res.status(500).json({ message: "Ошибка AI. Попробуйте позже." });
+      }
+    }
+  });
+
+  // === Admin Middleware ===
+  const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.session.userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const user = await storage.getUser(req.session.userId);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ message: "Доступ запрещён" });
+    }
+    next();
+  };
+
+  // === Admin Routes ===
+
+  // Get admin stats
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+      const days = Number(req.query.days) || 7;
+      const stats = await storage.getStats(days);
+      res.json(stats);
+    } catch (err) {
+      console.error("Admin stats error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Get all users
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Don't send password hashes
+      const safeUsers = users.map(({ passwordHash: _, ...user }) => user);
+      res.json(safeUsers);
+    } catch (err) {
+      console.error("Admin users error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Block user
+  app.patch("/api/admin/users/:id/block", requireAdmin, async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const user = await storage.blockUser(userId);
+      const { passwordHash: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (err) {
+      console.error("Block user error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Unblock user
+  app.patch("/api/admin/users/:id/unblock", requireAdmin, async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const user = await storage.unblockUser(userId);
+      const { passwordHash: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (err) {
+      console.error("Unblock user error:", err);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Reset user password
+  const resetPasswordSchema = z.object({
+    newPassword: z.string().min(6, "Пароль слишком короткий (минимум 6 символов)")
+  });
+
+  app.post("/api/admin/users/:id/reset-password", requireAdmin, async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const { newPassword } = resetPasswordSchema.parse(req.body);
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+      const user = await storage.updateUserPassword(userId, passwordHash);
+      const { passwordHash: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("Reset password error:", err);
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  // Update user role
+  const updateRoleSchema = z.object({
+    role: z.enum(["user", "admin"])
+  });
+
+  app.patch("/api/admin/users/:id/role", requireAdmin, async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const { role } = updateRoleSchema.parse(req.body);
+      const user = await storage.updateUserRole(userId, role);
+      const { passwordHash: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        res.status(400).json({ message: err.errors[0]?.message || "Invalid input" });
+      } else {
+        console.error("Update role error:", err);
+        res.status(500).json({ message: "Server error" });
       }
     }
   });
