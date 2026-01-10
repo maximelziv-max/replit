@@ -6,9 +6,6 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app);
 
-// Healthcheck endpoint for Timeweb (must be before all other routes)
-app.get("/health", (_req, res) => res.status(200).send("OK"));
-
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
