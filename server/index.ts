@@ -2,7 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-
+console.log("BOOT_MARKER=db_connectionString_v3");
+console.log("ENV DATABASE_URL exists:", !!process.env.DATABASE_URL);
+console.log("ENV DATABASE_URL starts:", (process.env.DATABASE_URL || "").slice(0, 35));
 const app = express();
 const httpServer = createServer(app);
 
